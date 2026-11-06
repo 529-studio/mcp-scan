@@ -287,7 +287,8 @@
             <strong>mcp-scan</strong> is the first 5-minute security check for MCP servers.
             It finds unpinned packages, leaked secrets, shell wrappers, broad filesystem roots,
             wildcard binds, and write access granted by default. In live mode it also reads
-            <span class="mono">tools/list</span> and flags dangerous descriptions, schemas, and annotations — then gives you the fix.
+            <span class="mono">tools/list</span> and flags dangerous descriptions, schemas, and annotations.
+            Add <span class="mono">--dynamic</span> to probe read-only tools inside a sandbox — then it gives you the fix.
           </p>
           <div class="hero-actions">
             <button class="btn btn-primary" id="copy-run" type="button">
