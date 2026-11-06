@@ -88,7 +88,7 @@ Rules of engagement:
 - [x] Add `--live` and `--stdio` targets.
 - [x] Tests for protocol parsing, pagination, timeouts, and tool rules.
 - [ ] HTTP/SSE transport (moved to M2).
-- [ ] Independent reviewer/auditor sign-off (pending quota).
+- [ ] Independent subagent sign-off (pending quota; manual review/audit done).
 
 ### M2 — Dynamic sandbox
 
