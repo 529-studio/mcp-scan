@@ -1,0 +1,68 @@
+name: Branch Protection - Enforce Pull Requests
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  enforce-pr:
+    name: Enforce Pull Request Policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Verify Pull Request Origin
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B "$COMMIT_SHA")
+
+          if echo "$COMMIT_MSG" | grep -qi "\[skip-pr-check\]"; then
+            echo "Bypass flag detected."
+            exit 0
+          fi
+
+          PARENT_COUNT=$(git rev-parse "${COMMIT_SHA}^@" | wc -w | tr -d ' ')
+          if [ "$PARENT_COUNT" -gt 1 ]; then
+            echo "Merge commit detected."
+            exit 0
+          fi
+
+          if echo "$COMMIT_MSG" | grep -qE "Merge pull request #[0-9]+|Merge branch|\(#[0-9]+\)"; then
+            echo "PR merge pattern detected."
+            exit 0
+          fi
+
+          PR_COUNT=$(gh api "repos/${{ github.repository }}/commits/${COMMIT_SHA}/pulls" \
+            --jq '[.[] | select(.state == "closed" and .merged_at != null)] | length' \
+            2>/dev/null || echo "0")
+
+          if [ "$PR_COUNT" -gt 0 ]; then
+            echo "Associated merged PR detected."
+            exit 0
+          fi
+
+          echo "[ERR] Direct push to '$BRANCH_NAME' is forbidden."
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "[WARN] Direct push on ${BRANCH_NAME} by @${ACTOR}" \
+            --body "Direct push detected on **${BRANCH_NAME}** without an associated PR. Use a feature branch and open a PR against \`dev\`." \
+            || true
+          exit 1

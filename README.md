@@ -237,6 +237,15 @@ If you need a different license for a commercial embedding, open an issue or con
 
 ---
 
+## Repository operations
+
+- `make check` — tests, docs gate, and public-safety scan.
+- `AGENTS.md` — project rules and the 529 Studio standards.
+- `docs/ONBOARDING.md` — how the repo is organized.
+- `.agents/skills/` — MCP security review, rule authoring, OSS GTM.
+- `.agents/teamwork/` — subagent briefs and handoffs.
+- `docs/lessons/INDEX.md` — one row per engineering lesson.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). New rules are welcome, especially ones backed by a real MCP server and a reproducible fixture.

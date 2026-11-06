@@ -1,0 +1,47 @@
+// mcp-scan — example MCP config.
+// Copy to .mcp.json (gitignored), replace placeholders, and pin every package.
+// Do not commit real tokens.
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@<pinned-version>",
+        "${workspaceFolder}"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@<pinned-version>"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<from-secret-manager>"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@<pinned-version>",
+        "--headless",
+        "--isolated"
+      ]
+    },
+    "outline": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "outline-mcp-server@<pinned-version>",
+        "outline-mcp-server-stdio"
+      ],
+      "env": {
+        "OUTLINE_API_KEY": "<from-secret-manager>",
+        "OUTLINE_API_URL": "https://docs.529studio.site/api"
+      }
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch@<pinned-version>"]
+    }
+  }
+}
