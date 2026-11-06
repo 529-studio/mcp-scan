@@ -90,12 +90,14 @@ Rules of engagement:
 - [ ] HTTP/SSE transport (moved to M2).
 - [ ] Independent subagent sign-off (pending quota; manual review/audit done).
 
-### M2 — Dynamic sandbox
+### M2 — Dynamic sandbox (planned)
 
-- Run a server in an isolated sandbox (Docker/gVisor).
-- Send canary prompts; detect data exfiltration and tool abuse.
-- Capture evidence without exploiting.
-- Add `--dynamic` flag (opt-in).
+Plan: [docs/sprints/M2-DYNAMIC-SANDBOX.md](sprints/M2-DYNAMIC-SANDBOX.md)
+
+- Run a server in an isolated sandbox (Docker; `process` adapter for tests).
+- Send canary inputs; detect host reads, writes, leaks, and instruction-like output.
+- Capture an evidence bundle without exploiting.
+- Add `--dynamic`, `--sandbox`, `--allow-tool`, and `--allow-network` (opt-in).
 
 ### M3 — Public report + vendor badge
 
