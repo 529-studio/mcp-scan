@@ -1,0 +1,25 @@
+name: Public Safety Guard
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-safety-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: Scan for non-public material
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run public-safety guard
+        run: bash scripts/check-public-safe.sh

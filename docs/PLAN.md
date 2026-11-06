@@ -1,0 +1,160 @@
+# mcp-scan — Plan
+
+**Status:** v0.1.0 shipped (10 config rules). This plan covers the agent-ops bootstrap and the next two milestones.
+
+**Goal:** make `mcp-scan` the default 5-minute security check for MCP servers, then turn the public report and vendor badge into a repeatable distribution engine.
+
+---
+
+## 1. Current state
+
+- CLI: `node src/cli.js <path>` with text, JSON, and SARIF output.
+- 10 deterministic rules (`MCP-001`..`MCP-010`).
+- Tests: fixtures + `node test/run.js`.
+- CI: `test` and `self-scan` workflows pass.
+- Landing page: `site/index.html`.
+- License: Apache-2.0 core; commercial enterprise layer.
+- No runtime connection, no dynamic sandbox yet.
+
+---
+
+## 2. Strategy
+
+Three engines, in order:
+
+1. **Open source** — CLI, rules, GitHub Action. Distribution: GitHub, Hacker News, MCP Discord.
+2. **Public report** — “State of MCP Security 2026”. Distribution: report, Reddit, LinkedIn.
+3. **Vendor badge** — “MCP Security Verified”. Distribution: vendor READMEs.
+
+The paid layer is the hosted dashboard, evidence retention, SSO, policy packs, and runtime guard. The scanner stays open.
+
+---
+
+## 3. Who pays
+
+| Segment | Economic buyer | Budget | Price |
+|---|---|---|---|
+| AI-native startup | CTO/Founder | AI platform, security | $99–$999/mo |
+| Mid-market SaaS | CISO/VP Engineering | AppSec, compliance | $2k–$10k/mo |
+| Enterprise AI platform | CISO/CTO | Security, AI platform | $50k–$200k/yr |
+| MSSP/consultancy | Partner | Delivery tooling | $1k–$5k/mo/client |
+
+See `docs/gtm-plan.md` for the full buyer map, scripts, and 90-day calendar.
+
+---
+
+## 4. Workstreams and subagents
+
+| Role | Folder | Owns | Output |
+|---|---|---|---|
+| Product Owner | `.agents/teamwork/po_m1/` | Scope, acceptance criteria, issue list | `handoff.md` with M1 scope |
+| Spec Miner | `.agents/teamwork/spec_miner_m1/` | MCP threat model, rule specs, references | Rule spec for `MCP-011`..`MCP-020` |
+| Worker — CLI | `.agents/teamwork/worker_cli_m1/` | MCP handshake, parser, output | Code + tests + handoff |
+| Worker — Rules | `.agents/teamwork/worker_rules_m1/` | New rules, fixtures, docs | Code + fixtures + handoff |
+| Reviewer | `.agents/teamwork/reviewer_m1/` | Code and docs review | Review report |
+| Auditor | `.agents/teamwork/auditor_m1/` | Independent verification | Audit report |
+| Challenger | `.agents/teamwork/challenger_m1/` | Adversarial configs, false positives | Findings + fixtures |
+| Victory Auditor | `.agents/teamwork/victory_auditor_m1/` | Final acceptance against DoD | Pass/fail + evidence |
+
+Rules of engagement:
+
+- One writer per file set. CLI worker owns `src/cli.js`; rules worker owns `src/rules.js` and `docs/rules.md`.
+- Reviewer and auditor are read-only. They may run commands, not edit.
+- The victory auditor signs off only with empirical evidence.
+
+---
+
+## 5. Milestones
+
+### M0 — Agent ops bootstrap (this PR)
+
+- [x] `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`
+- [x] `docs/ONBOARDING.md`, `docs/PLAN.md`, `docs/ARCHITECTURE.md`, `docs/MCP_SETUP.md`
+- [x] `docs/lessons/INDEX.md` + L01–L08
+- [x] `.agents/skills/` with three project skills
+- [x] `.agents/teamwork/` with eight roles
+- [x] `.mcp.example.jsonc` + MCP setup guide
+- [x] `Makefile`, `tools/docs/docs_lint.py`, `scripts/check-public-safe.sh`
+- [x] PR template, CODEOWNERS, branch guard, docs lint, secret scan, public-safety
+- [ ] PR opened against `dev`; `@giangdq202` tagged by the human owner after review
+
+### M1 — Protocol-aware scanner
+
+- Parse a live MCP server: `initialize`, `tools/list`.
+- Detect tool descriptions with instruction-like content.
+- Parse tool schemas for dangerous primitives (shell, file write, network).
+- Add 10 rules (`MCP-011`..`MCP-020`).
+- Add `--stdio` and `--url` targets.
+- Tests for protocol parsing and schema rules.
+
+### M2 — Dynamic sandbox
+
+- Run a server in an isolated sandbox (Docker/gVisor).
+- Send canary prompts; detect data exfiltration and tool abuse.
+- Capture evidence without exploiting.
+- Add `--dynamic` flag (opt-in).
+
+### M3 — Public report + vendor badge
+
+- Scan 20 public MCP configs with permission.
+- Responsible disclosure.
+- Publish “State of MCP Security 2026”.
+- Launch the badge program.
+- 3 design partners, 3 paid accounts.
+
+### M4 — Hosted evidence layer
+
+- Dashboard, scan history, Slack/Jira, SSO.
+- Policy-as-code.
+- Pro/Team plans.
+- SOC2 readiness.
+
+---
+
+## 6. Definition of Done
+
+A task is done only when:
+
+1. `node test/run.js` passes.
+2. `make docs-lint` and `make public-safety` pass.
+3. New rules have a fixture, a docs entry, and a test.
+4. The CLI output is verified on a real config.
+5. `README.md` and affected docs are updated.
+6. A lesson is recorded in `docs/lessons/` if the work revealed a trap.
+7. No secrets, no internal hostnames, no unbuilt claims.
+
+---
+
+## 7. Risks
+
+| Risk | Mitigation |
+|---|---|
+| False positives | Narrow rules, evidence, suppression, fixtures |
+| MCP spec changes | Versioned parser, CI fixtures |
+| Incumbents add MCP scanning | Speed, OSS distribution, badge network |
+| Liability | No exploitation, disclaimers, responsible disclosure |
+| “AI security” hype | Stay narrow: config + protocol + evidence |
+| Enterprise sales cycle | Self-serve + design partners + MSSP |
+
+---
+
+## 8. Metrics
+
+- GitHub stars: 500 in 90 days.
+- Weekly installs: 100.
+- Report downloads: 1,000.
+- Design partners: 3.
+- Paid accounts: 3.
+- False positive rate: <10%.
+- Time to first finding: <5 minutes.
+
+---
+
+## 9. What not to do
+
+- Do not add 100 rules before 10 are correct.
+- Do not build a dashboard before 3 design partners.
+- Do not publish exploitable findings.
+- Do not claim “100% secure”.
+- Do not run paid ads before the report has traction.
+- Do not put real secrets in fixtures or docs.

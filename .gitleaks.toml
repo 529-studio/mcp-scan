@@ -1,0 +1,8 @@
+title = "mcp-scan"
+
+# Fixtures intentionally contain obviously fake values. They are not secrets.
+[allowlist]
+paths = [
+  '''test/fixtures/.*''',
+  '''docs/lessons/.*''',
+]

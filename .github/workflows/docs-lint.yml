@@ -1,0 +1,32 @@
+name: Docs Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Enforce documentation rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile the gate
+        run: python3 -m py_compile tools/docs/docs_lint.py
+
+      - name: Run docs-lint
+        run: python3 tools/docs/docs_lint.py
