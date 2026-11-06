@@ -90,14 +90,18 @@ Rules of engagement:
 - [ ] HTTP/SSE transport (moved to M2).
 - [ ] Independent subagent sign-off (pending quota; manual review/audit done).
 
-### M2 — Dynamic sandbox (planned)
+### M2 — Dynamic sandbox (implementation complete)
 
 Plan: [docs/sprints/M2-DYNAMIC-SANDBOX.md](sprints/M2-DYNAMIC-SANDBOX.md)
 
-- Run a server in an isolated sandbox (Docker; `process` adapter for tests).
-- Send canary inputs; detect host reads, writes, leaks, and instruction-like output.
-- Capture an evidence bundle without exploiting.
-- Add `--dynamic`, `--sandbox`, `--allow-tool`, and `--allow-network` (opt-in).
+- [x] Sandbox runner with `docker` and `process` adapters.
+- [x] Canary files and canary inputs.
+- [x] `DYN-001`..`DYN-005`.
+- [x] Evidence bundle.
+- [x] `--dynamic`, `--sandbox`, `--allow-tool`, `--max-tools`, `--evidence`.
+- [x] Docker adapter flags and process adapter tests.
+- [ ] Docker smoke test on a real image (manual).
+- [ ] Independent reviewer/auditor sign-off (pending quota).
 
 ### M3 — Public report + vendor badge
 

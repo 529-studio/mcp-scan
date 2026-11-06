@@ -1,6 +1,6 @@
 # M2 — Dynamic Sandbox
 
-**Status:** PLAN
+**Status:** IMPLEMENTED (manual review/audit; Docker smoke test pending)
 **Owner:** thdat-vu
 **Date:** 2026-11-06
 **Estimate:** 10–14 active hours (2 working days)
@@ -357,3 +357,31 @@ Why more than one:
 M1 is static + protocol-aware. M2 is behavioral. M1 findings remain the first pass; M2 adds evidence for the tools a human would otherwise have to test by hand.
 
 M2 does not replace a pentest. It replaces the repetitive first hour of one.
+
+---
+
+## 18. Implementation note
+
+Implemented on 2026-11-06:
+
+- `src/sandbox/runner.js`, `src/sandbox/docker.js`, `src/sandbox/process.js`.
+- `src/dynamic/canary.js`, `src/dynamic/probe.js`, `src/dynamic/rules.js`, `src/dynamic/evidence.js`.
+- `src/cli.js` flags: `--dynamic`, `--sandbox`, `--sandbox-image`, `--allow-network`, `--max-tools`, `--allow-tool`, `--evidence`.
+- `test/fixtures/dynamic/server.js`, `test/dynamic.test.js`, expanded `test/run.js`.
+- Docs: README, ARCHITECTURE, rules, PLAN.
+
+Verification:
+
+```text
+$ node test/run.js
+ok — 10 tool rules, clean fixture, bounded evidence
+ok — protocol initialize, pagination, error, timeout
+ok — dynamic canary, selection, Docker flags, DYN-001..005
+ok — config, tool, protocol, dynamic, live CLI
+```
+
+Remaining:
+
+- Docker adapter has unit coverage for its flags but no live Docker smoke test in CI.
+- Independent reviewer/auditor sign-off is pending because the subagent quota is blocked.
+- Network egress detection is best-effort; `MCP-015` remains the static signal.

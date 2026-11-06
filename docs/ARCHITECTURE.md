@@ -6,6 +6,8 @@
 
 ## 1. Pipeline
 
+### Static config scan
+
 ```text
 argv
   │
@@ -21,6 +23,39 @@ parseArgs ──▶ findConfig ──▶ JSON.parse ──▶ extractServers
                           ┌─────────────────────┼─────────────────────┐
                           ▼                     ▼                     ▼
                         text                  json                  sarif
+```
+
+### Live scan
+
+```text
+--live / --stdio
+  │
+  ▼
+connectStdio ──▶ initialize ──▶ tools/list ──▶ scanTools
+                                                │
+                                                ▼
+                                         sort + output
+```
+
+### Dynamic scan
+
+```text
+--dynamic
+  │
+  ▼
+createCanaryDir ──▶ createSandbox (docker/process)
+  │
+  ▼
+connectStdio ──▶ initialize ──▶ tools/list
+  │
+  ▼
+probeTools (read-only tools, canary inputs)
+  │
+  ▼
+evaluateDynamic (DYN-001..DYN-005)
+  │
+  ▼
+evidence bundle + output
 ```
 
 ---
@@ -62,6 +97,19 @@ parseArgs ──▶ findConfig ──▶ JSON.parse ──▶ extractServers
 - Runs deterministic rules over `tools/list` entries.
 - Checks descriptions, schemas, annotations, hidden content, and destructive primitives.
 - Never executes a tool.
+
+### `src/sandbox/`
+
+- `runner.js` selects `docker`, `process`, or `none`.
+- `docker.js` builds the isolation flags and runs the server inside the container.
+- `process.js` runs the server locally for tests; it is not isolated.
+
+### `src/dynamic/`
+
+- `canary.js` creates disposable canary files and snapshots the directory.
+- `probe.js` selects read-only tools, builds canary inputs, calls them, and diffs the canary directory.
+- `rules.js` evaluates `DYN-001`..`DYN-005`.
+- `evidence.js` writes a masked JSON bundle.
 
 ### `test/run.js`
 
@@ -133,11 +181,12 @@ Live mode (M1) is implemented:
 - `--live` and `--stdio` flags.
 - HTTP transport is still pending.
 
-Dynamic sandbox (M2) will add:
+Dynamic sandbox (M2) is implemented:
 
-- `src/sandbox/` — isolated runner.
-- `--dynamic` opt-in flag.
-- Canary prompts and egress checks.
+- `src/sandbox/` — Docker and process adapters.
+- `src/dynamic/` — canaries, probes, rules, evidence.
+- `--dynamic`, `--sandbox`, `--allow-tool`, `--max-tools`, `--allow-network`, `--evidence`.
+- Egress detection is best-effort; the static `MCP-015` rule remains the primary signal.
 
 ---
 
@@ -155,6 +204,8 @@ Dynamic sandbox (M2) will add:
 
 - No network calls in static mode.
 - No execution of MCP servers in static mode.
-- Secrets masked in output.
+- Dynamic mode is opt-in and runs the server in a sandbox.
+- Docker is the default: no network, read-only root, dropped capabilities, non-root user.
+- Secrets and canaries are masked in output.
 - No telemetry.
 - Hosted features are opt-in and separate.

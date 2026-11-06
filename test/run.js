@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "./protocol.test.js";
 import "./tool-rules.test.js";
+import "./dynamic.test.js";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const cli = path.join(root, "src", "cli.js");
@@ -15,6 +18,13 @@ const protocolServer = path.join(
   "test",
   "fixtures",
   "protocol",
+  "server.js",
+);
+const dynamicServer = path.join(
+  root,
+  "test",
+  "fixtures",
+  "dynamic",
   "server.js",
 );
 
@@ -116,4 +126,101 @@ const hanging = run([
 assert.equal(hanging.status, 2);
 assert.match(hanging.stderr, /timed out after 300ms/);
 
-console.log("ok — 10 config rules, 10 tool rules, protocol, live CLI");
+const dynamic = run([
+  "--stdio",
+  process.execPath,
+  "--arg",
+  dynamicServer,
+  "--dynamic",
+  "--sandbox",
+  "process",
+  "--allow-tool",
+  "write_outside",
+  "--max-tools",
+  "6",
+  "--timeout",
+  "300",
+  "--format",
+  "json",
+  "--fail-on",
+  "none",
+]);
+assert.equal(dynamic.status, 0, dynamic.stderr);
+const dynamicJson = JSON.parse(dynamic.stdout);
+
+for (const id of ["DYN-001", "DYN-002", "DYN-003", "DYN-004", "DYN-005"]) {
+  assert.ok(
+    dynamicJson.findings.some((finding) => finding.id === id),
+    `dynamic scan should include ${id}`,
+  );
+}
+
+const evidencePath = path.join(
+  os.tmpdir(),
+  `mcp-scan-evidence-${process.pid}.json`,
+);
+const dynamicEvidence = run([
+  "--stdio",
+  process.execPath,
+  "--arg",
+  dynamicServer,
+  "--dynamic",
+  "--sandbox",
+  "process",
+  "--allow-tool",
+  "write_outside",
+  "--max-tools",
+  "6",
+  "--timeout",
+  "300",
+  "--format",
+  "json",
+  "--fail-on",
+  "none",
+  "--evidence",
+  evidencePath,
+]);
+assert.equal(dynamicEvidence.status, 0, dynamicEvidence.stderr);
+assert.ok(fs.existsSync(evidencePath));
+const evidence = JSON.parse(fs.readFileSync(evidencePath, "utf8"));
+assert.equal(evidence.mode, "dynamic");
+assert.equal(evidence.sandbox, "process");
+assert.equal(evidence.network, false);
+fs.rmSync(evidencePath, { force: true });
+
+const dynamicNoLive = run(["--dynamic", "--format", "json"]);
+assert.equal(dynamicNoLive.status, 2);
+assert.match(dynamicNoLive.stderr, /--dynamic requires/);
+
+const dynamicNetwork = run([
+  "--dynamic",
+  "--stdio",
+  process.execPath,
+  "--arg",
+  dynamicServer,
+  "--sandbox",
+  "process",
+  "--allow-network",
+  "--format",
+  "json",
+]);
+assert.equal(dynamicNetwork.status, 2);
+assert.match(dynamicNetwork.stderr, /--allow-network is not supported/);
+
+const dynamicMax = run([
+  "--dynamic",
+  "--stdio",
+  process.execPath,
+  "--arg",
+  dynamicServer,
+  "--sandbox",
+  "process",
+  "--max-tools",
+  "0",
+  "--format",
+  "json",
+]);
+assert.equal(dynamicMax.status, 2);
+assert.match(dynamicMax.stderr, /--max-tools/);
+
+console.log("ok — config, tool, protocol, dynamic, live CLI");

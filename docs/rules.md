@@ -217,9 +217,44 @@ This produces `MCP-011`, `MCP-012`, `MCP-014`, `MCP-015`, and `MCP-017`.
 
 ---
 
+## Dynamic rules (DYN-001..DYN-005)
+
+These rules run only with `--dynamic`. The server runs inside a sandbox, and the scanner calls a small set of read-only tools with canary inputs.
+
+| ID | Title | Severity | Signal |
+|---|---|---|---|
+| `DYN-001` | Tool read a host canary file | High | A canary file outside the tool's declared scope appears in the output |
+| `DYN-002` | Tool modified a file outside its output directory | High | The canary directory changed at a path other than `out/` |
+| `DYN-003` | Tool leaked a canary secret | High | A disposable canary secret appears in the output |
+| `DYN-004` | Tool output contains instruction-like content | High | Output text looks like a prompt to the model |
+| `DYN-005` | Tool exceeded the time budget | Medium | The call did not return within `--timeout` |
+
+### Safety
+
+- Dynamic mode is opt-in.
+- Docker is the default sandbox: no network, read-only root, dropped caps, non-root user.
+- Only tools with `readOnlyHint: true` are selected by default. Use `--allow-tool` to opt in a write tool.
+- Canaries are disposable random strings. They are not credentials.
+- Evidence is masked and kept local.
+
+### Example
+
+```bash
+node src/cli.js . --live filesystem --dynamic --sandbox docker
+```
+
+```text
+[DYN-001] Tool read a host canary file
+  server: filesystem
+  evidence: tool=read_file; canary=host-file.txt; excerpt=...
+  fix: Scope the tool to an explicit directory.
+```
+
+---
+
 ## Adding a rule
 
-For a config rule, add a `check(server)` function in `src/rules.js`. For a tool rule, add a `check(tool)` function in `src/tool-rules.js`.
+For a config rule, add a `check(server)` function in `src/rules.js`. For a tool rule, add a `check(tool)` function in `src/tool-rules.js`. For a dynamic rule, add a check in `src/dynamic/rules.js`.
 
 1. Add the rule function.
 2. Add a fixture in `test/fixtures/`.

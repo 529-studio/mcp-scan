@@ -7,6 +7,9 @@
 const INSTRUCTION =
   /\b(ignore (all |any )?(previous|prior|above)|system prompt|do not tell|secretly|exfiltrate|send (it|this|the .*?)? ?to|before using this tool|read .*\.ssh)\b/i;
 
+export const looksLikeInstruction = (text) =>
+  INSTRUCTION.test(typeof text === "string" ? text : "");
+
 const SECRET_PATH =
   /(~\/\.ssh|id_rsa|\.env\b|\.aws\/credentials|\.npmrc|\.netrc|credentials\.json)/i;
 
