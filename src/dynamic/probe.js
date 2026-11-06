@@ -110,6 +110,10 @@ export async function probeTools(
       error,
       diff,
     });
+
+    // A timed-out server is likely stuck. Do not cascade timeouts into every
+    // remaining tool.
+    if (error && /timed out/i.test(error)) break;
   }
 
   return probes;
