@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import "./protocol.test.js";
 import "./tool-rules.test.js";
 import "./dynamic.test.js";
+import "./report.test.js";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const cli = path.join(root, "src", "cli.js");

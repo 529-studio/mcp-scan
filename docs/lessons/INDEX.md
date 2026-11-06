@@ -17,3 +17,4 @@ One row per engineering lesson. The full text lives in the linked file; this ind
 | 11 | Canary evidence must mask every derived value | Mask canary values and canary-derived inputs, not just the base secrets. | [L11](L11-canary-evidence-must-mask-every-derived-value.md) |
 | 12 | Dynamic mode must fail closed | If the sandbox cannot start, exit; never fall back to the host silently. | [L12](L12-dynamic-mode-must-fail-closed.md) |
 | 13 | Bind mounts must live in a shared path | Put canaries under the home directory; macOS `/var/folders` is not shared with Docker. | [L13](L13-bind-mounts-must-live-in-a-shared-path.md) |
+| 14 | Aggregate reports must strip evidence at the boundary | Aggregate counts by allowlist; never copy findings wholesale into a report. | [L14](L14-aggregate-reports-must-strip-evidence.md) |

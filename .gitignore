@@ -9,3 +9,5 @@ dist/
 .mcp.json
 .mcp-scan/
 *.sarif
+
+.playwright-mcp/

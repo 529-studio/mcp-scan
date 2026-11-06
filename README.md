@@ -318,6 +318,13 @@ If you need a different license for a commercial embedding, open an issue or con
 - `main` is the stable release branch. Promote `dev` to `main` with a PR when a release is cut.
 - Open feature PRs against `dev`. Direct pushes to `dev` or `main` are blocked by the branch guard.
 
+## Report and badge
+
+- [State of MCP Security 2026](docs/reports/state-of-mcp-security-2026.md) — draft; sample data only. The 20-config sample is being collected with permission.
+- [MCP Security Verified](docs/BADGE_PROGRAM.md) — limited, revocable scan result; applications open for the first 10 vendors.
+- [Report page](site/report/index.html) and [badge page](site/badge/index.html).
+- [Badge application](.github/ISSUE_TEMPLATE/badge-application.md).
+
 ## Repository operations
 
 - `make check` — tests, docs gate, and public-safety scan.
