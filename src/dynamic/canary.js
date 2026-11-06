@@ -9,7 +9,14 @@ import path from "node:path";
  * The values are random, non-credential strings. They are evidence, not secrets.
  */
 export function createCanaryDir() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mcp-scan-canary-"));
+  // Docker Desktop and colima share the user's home directory by default.
+  // macOS puts os.tmpdir() under /var/folders, which is not shared, so a bind
+  // mount from there appears empty inside the container.
+  const base =
+    process.env.MCP_SCAN_CANARY_BASE || path.join(os.homedir(), ".mcp-scan");
+  fs.mkdirSync(base, { recursive: true, mode: 0o700 });
+
+  const dir = fs.mkdtempSync(path.join(base, "canary-"));
   const token = crypto.randomBytes(8).toString("hex");
 
   const files = {

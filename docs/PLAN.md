@@ -100,7 +100,7 @@ Plan: [docs/sprints/M2-DYNAMIC-SANDBOX.md](sprints/M2-DYNAMIC-SANDBOX.md)
 - [x] Evidence bundle.
 - [x] `--dynamic`, `--sandbox`, `--allow-tool`, `--max-tools`, `--evidence`.
 - [x] Docker adapter flags and process adapter tests.
-- [ ] Docker smoke test on a real image (manual).
+- [x] Docker smoke test on a real image (`make smoke-docker`).
 - [ ] Independent reviewer/auditor sign-off (pending quota).
 
 ### M3 — Public report + vendor badge

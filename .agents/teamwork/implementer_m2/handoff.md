@@ -28,4 +28,4 @@ ok — config, tool, protocol, dynamic, live CLI
 
 - Docker is the default sandbox; `process` is for tests and trusted servers.
 - Docker requires the server command to exist inside the image; `npx` installs are blocked by `--network none`.
-- Docker smoke test is pending because the local Docker daemon is unavailable.
+- Docker smoke test passes via `make smoke-docker` (colima + `node:20-alpine`).

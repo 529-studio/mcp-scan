@@ -1,6 +1,6 @@
 # M2 — Dynamic Sandbox
 
-**Status:** IMPLEMENTED (manual review/audit; Docker smoke test pending)
+**Status:** IMPLEMENTED (manual review/audit; Docker smoke test passed)
 **Owner:** thdat-vu
 **Date:** 2026-11-06
 **Estimate:** 10–14 active hours (2 working days)
@@ -382,6 +382,6 @@ ok — config, tool, protocol, dynamic, live CLI
 
 Remaining:
 
-- Docker adapter has unit coverage for its flags but no live Docker smoke test in CI.
+- Docker smoke test passes locally via `make smoke-docker`; CI does not run Docker, so the adapter flags remain unit-tested in CI.
 - Independent reviewer/auditor sign-off is pending because the subagent quota is blocked.
 - Network egress detection is best-effort; `MCP-015` remains the static signal.

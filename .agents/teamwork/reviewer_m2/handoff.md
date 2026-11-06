@@ -22,7 +22,7 @@
 
 ## Non-Blocking Issues
 
-- Docker smoke test is pending because Docker is not running locally.
+- Docker smoke test passes locally via `make smoke-docker`; CI does not run Docker.
 - Network egress detection is best-effort; `MCP-015` remains the static signal.
 - Independent subagent review is pending because of the free model quota.
 

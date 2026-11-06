@@ -22,8 +22,9 @@ DYN-001..DYN-005 present
 ```
 
 ```text
-$ docker version
-failed to connect to the docker API
+$ make smoke-docker
+[INFO] Running dynamic Docker scan...
+[OK] Docker sandbox read the host canary and reported DYN-001.
 ```
 
 ## Pass/Fail
@@ -40,7 +41,7 @@ failed to connect to the docker API
 | `DYN-005` timeout | PASS |
 | Evidence contains no raw canary token | PASS |
 | Docker flags include `--network none`, `--read-only`, `--cap-drop ALL` | PASS (unit) |
-| Docker smoke test | PENDING (daemon unavailable) |
+| Docker smoke test | PASS (`make smoke-docker`) |
 
 ## Integrity
 
@@ -50,6 +51,6 @@ failed to connect to the docker API
 
 ## Residual Risk
 
-- Docker adapter is unit-tested but not smoke-tested on a live daemon here.
+- Docker smoke test passes locally; CI does not run Docker.
 - Dynamic mode is heuristic; canaries cover common host read/write paths, not every exfiltration channel.
 - Independent subagent audit is pending due to quota.

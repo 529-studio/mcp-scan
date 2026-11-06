@@ -92,7 +92,15 @@ Dynamic mode runs the server inside a sandbox, calls a small set of read-only to
 
 The server's working directory is the canary directory. Use an absolute command path (for example `$PWD/server.js`) or a packaged image; a relative path will not resolve from the canary directory.
 
+Canaries are created under `~/.mcp-scan/canary-*` by default so Docker Desktop and colima can bind-mount them. Override the base with `MCP_SCAN_CANARY_BASE`.
+
 Docker mode requires the server command to exist inside the sandbox image. `npx` installs are blocked by the default `--network none`; use a prebuilt image, or use `--sandbox process` only for trusted servers.
+
+Run the end-to-end Docker check with:
+
+```bash
+make smoke-docker
+```
 
 `--stdio` runs the command you provide. Only scan servers you trust, and prefer a pinned binary or package. `--sandbox process` does not isolate the child; use Docker for untrusted servers.
 
@@ -313,6 +321,7 @@ If you need a different license for a commercial embedding, open an issue or con
 ## Repository operations
 
 - `make check` — tests, docs gate, and public-safety scan.
+- `make smoke-docker` — end-to-end Docker dynamic-mode smoke test.
 - `AGENTS.md` — project rules and the 529 Studio standards.
 - `docs/ONBOARDING.md` — how the repo is organized.
 - `.agents/skills/` — MCP security review, rule authoring, OSS GTM.
