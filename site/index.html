@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>mcp-scan — Security scanner for MCP servers and AI agents</title>
+  <meta name="description" content="Find the security mistakes in your MCP servers before they reach production. Deterministic checks, CI-friendly output, evidence for audits. Open source, Apache-2.0." />
+  <meta name="theme-color" content="#07090c" />
+  <meta property="og:title" content="mcp-scan — Security scanner for MCP servers" />
+  <meta property="og:description" content="Find the security mistakes in your MCP servers before they reach production. Open source, Apache-2.0." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://github.com/529-studio/mcp-scan" />
+  <link rel="canonical" href="https://github.com/529-studio/mcp-scan" />
+  <style>
+    :root {
+      --bg: #07090c;
+      --panel: #0b0f14;
+      --panel-2: #0f151c;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --muted-2: #6e7681;
+      --line: #1c2430;
+      --line-2: #263241;
+      --mint: #5eead4;
+      --mint-dim: #2dd4bf;
+      --violet: #a78bfa;
+      --red: #f87171;
+      --amber: #fbbf24;
+      --green: #4ade80;
+      --radius: 14px;
+      --max: 1120px;
+      --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(900px 500px at 15% -10%, rgba(94, 234, 212, 0.10), transparent 60%),
+        radial-gradient(800px 500px at 90% 0%, rgba(167, 139, 250, 0.08), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    ::selection { background: rgba(94, 234, 212, 0.25); }
+
+    .wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .mono { font-family: var(--mono); }
+    .muted { color: var(--muted); }
+    .mint { color: var(--mint); }
+    .violet { color: var(--violet); }
+
+    /* nav */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(14px);
+      background: rgba(7, 9, 12, 0.72);
+      border-bottom: 1px solid rgba(28, 36, 48, 0.8);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.02em; }
+    .brand-mark {
+      width: 26px; height: 26px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--mint), var(--violet));
+      display: grid; place-items: center; color: #061014; font-family: var(--mono); font-size: 13px; font-weight: 800;
+    }
+    .nav-links { display: flex; align-items: center; gap: 26px; font-size: 14px; color: var(--muted); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--line-2); border-radius: 8px;
+      padding: 8px 12px; color: var(--text); font-size: 13px;
+      background: rgba(15, 21, 28, 0.7);
+    }
+    .nav-cta:hover { border-color: var(--mint); color: var(--mint); }
+    @media (max-width: 760px) { .nav-links { display: none; } }
+
+    /* hero */
+    .hero { padding: clamp(56px, 9vw, 104px) 0 clamp(40px, 6vw, 72px); }
+    .hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(28px, 5vw, 64px); align-items: center; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--line-2); border-radius: 999px;
+      padding: 5px 11px; font-size: 12px; color: var(--muted);
+      background: rgba(15, 21, 28, 0.6);
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 12px var(--mint); }
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(38px, 5.4vw, 64px);
+      line-height: 1.02;
+      letter-spacing: -0.045em;
+      font-weight: 760;
+    }
+    h1 .accent {
+      background: linear-gradient(100deg, var(--mint), var(--violet));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .lede { margin: 0; font-size: clamp(16px, 2vw, 19px); color: var(--muted); max-width: 54ch; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      height: 44px; padding: 0 18px; border-radius: 10px;
+      font-size: 14px; font-weight: 650; border: 1px solid transparent;
+      cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: var(--mint); color: #04110e; }
+    .btn-primary:hover { background: #7ff3e0; }
+    .btn-secondary { border-color: var(--line-2); color: var(--text); background: rgba(15, 21, 28, 0.6); }
+    .btn-secondary:hover { border-color: var(--mint); color: var(--mint); }
+    .micro { margin-top: 14px; font-size: 12.5px; color: var(--muted-2); }
+    .micro code { color: var(--muted); }
+
+    /* terminal */
+    .terminal {
+      border: 1px solid var(--line-2); border-radius: var(--radius);
+      background: linear-gradient(180deg, #0b1118, #080c11);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(94, 234, 212, 0.04) inset;
+      overflow: hidden;
+    }
+    .term-bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 11px 14px; border-bottom: 1px solid var(--line);
+      background: rgba(15, 21, 28, 0.7);
+    }
+    .term-dot { width: 9px; height: 9px; border-radius: 50%; background: #2a3441; }
+    .term-title { margin-left: 8px; font-size: 12px; color: var(--muted-2); font-family: var(--mono); }
+    .term-body { padding: 16px 16px 18px; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; overflow-x: auto; }
+    .term-line { white-space: pre; }
+    .c-dim { color: #6e7681; }
+    .c-mint { color: var(--mint); }
+    .c-red { color: var(--red); }
+    .c-amber { color: var(--amber); }
+    .c-violet { color: var(--violet); }
+    .c-text { color: #c9d1d9; }
+    .term-cursor { display: inline-block; width: 7px; height: 14px; background: var(--mint); vertical-align: -2px; animation: blink 1.1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } .terminal { max-width: 620px; } }
+
+    /* sections */
+    section { padding: clamp(56px, 8vw, 96px) 0; }
+    .section-head { max-width: 720px; margin-bottom: 34px; }
+    .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mint); }
+    h2 { margin: 10px 0 12px; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -0.03em; }
+    .section-head p { margin: 0; color: var(--muted); font-size: 16px; }
+
+    .rule-strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 18px 0; }
+    .rule-strip-inner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; color: var(--muted-2); font-size: 13px; }
+    .rule-strip-inner span { display: inline-flex; align-items: center; gap: 8px; }
+
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      border: 1px solid var(--line); border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(15, 21, 28, 0.82), rgba(11, 15, 20, 0.82));
+      padding: 22px;
+    }
+    .card:hover { border-color: var(--line-2); }
+    .card-icon {
+      width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+      border: 1px solid var(--line-2); background: rgba(94, 234, 212, 0.06); color: var(--mint);
+      font-family: var(--mono); font-size: 13px; margin-bottom: 16px;
+    }
+    .card h3 { margin: 0 0 8px; font-size: 16px; letter-spacing: -0.01em; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    @media (max-width: 900px) { .cards { grid-template-columns: 1fr; } }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .step { padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(11, 15, 20, 0.6); }
+    .step-num { font-family: var(--mono); font-size: 12px; color: var(--mint); margin-bottom: 14px; }
+    .step h3 { margin: 0 0 8px; font-size: 16px; }
+    .step p { margin: 0; color: var(--muted); font-size: 14px; }
+    @media (max-width: 900px) { .steps { grid-template-columns: 1fr; } }
+
+    .rules-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .rule {
+      display: grid; grid-template-columns: 92px 1fr auto; gap: 12px; align-items: center;
+      padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+      background: rgba(11, 15, 20, 0.55); font-size: 13.5px;
+    }
+    .rule-id { font-family: var(--mono); color: var(--muted-2); font-size: 12px; }
+    .sev { font-family: var(--mono); font-size: 11px; padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line-2); }
+    .sev-high { color: var(--red); border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.07); }
+    .sev-med { color: var(--amber); border-color: rgba(251, 191, 36, 0.3); background: rgba(251, 191, 36, 0.07); }
+    @media (max-width: 900px) { .rules-grid { grid-template-columns: 1fr; } }
+
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .feature-list { display: grid; gap: 12px; }
+    .feature {
+      display: flex; gap: 12px; padding: 14px 16px; border: 1px solid var(--line);
+      border-radius: 10px; background: rgba(11, 15, 20, 0.5);
+    }
+    .feature b { display: block; font-size: 14px; margin-bottom: 2px; }
+    .feature p { margin: 0; color: var(--muted); font-size: 13.5px; }
+    .check { color: var(--mint); font-family: var(--mono); }
+    @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+
+    .price-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .price {
+      border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
+      background: rgba(11, 15, 20, 0.6); display: flex; flex-direction: column; gap: 12px;
+    }
+    .price.featured { border-color: rgba(94, 234, 212, 0.35); background: linear-gradient(180deg, rgba(94, 234, 212, 0.06), rgba(11, 15, 20, 0.7)); }
+    .price h3 { margin: 0; font-size: 15px; }
+    .price .amount { font-size: 30px; letter-spacing: -0.04em; font-weight: 720; }
+    .price .amount span { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+    .price ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; color: var(--muted); font-size: 13.5px; }
+    .price li::before { content: "→ "; color: var(--mint); font-family: var(--mono); }
+    .price .btn { margin-top: auto; width: 100%; }
+    .tag { font-family: var(--mono); font-size: 10.5px; color: var(--muted-2); border: 1px solid var(--line-2); padding: 2px 6px; border-radius: 999px; width: fit-content; }
+    @media (max-width: 1000px) { .price-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 620px) { .price-grid { grid-template-columns: 1fr; } }
+
+    .faq { display: grid; gap: 10px; }
+    details { border: 1px solid var(--line); border-radius: 10px; background: rgba(11, 15, 20, 0.5); padding: 0 16px; }
+    details[open] { border-color: var(--line-2); }
+    summary { cursor: pointer; padding: 14px 0; font-weight: 600; font-size: 14.5px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--mint); font-family: var(--mono); }
+    details[open] summary::after { content: "–"; }
+    details p { margin: 0 0 14px; color: var(--muted); font-size: 14px; max-width: 78ch; }
+
+    .cta-band {
+      border: 1px solid var(--line-2); border-radius: 18px; padding: clamp(28px, 5vw, 52px);
+      background:
+        radial-gradient(600px 240px at 20% 0%, rgba(94, 234, 212, 0.12), transparent 60%),
+        radial-gradient(600px 240px at 90% 100%, rgba(167, 139, 250, 0.10), transparent 60%),
+        rgba(11, 15, 20, 0.7);
+      display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+    }
+    .cta-band h2 { margin: 0 0 6px; font-size: clamp(24px, 3vw, 34px); }
+    .cta-band p { margin: 0; color: var(--muted); }
+
+    footer { border-top: 1px solid var(--line); padding: 34px 0 50px; color: var(--muted-2); font-size: 13px; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
+    .footer-links a:hover { color: var(--mint); }
+
+    .copy-toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(10px);
+      background: var(--mint); color: #04110e; font-weight: 700; font-size: 13px;
+      padding: 10px 14px; border-radius: 10px; opacity: 0; pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease; z-index: 100;
+    }
+    .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .term-cursor { animation: none; }
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top" aria-label="mcp-scan home">
+        <span class="brand-mark">›_</span>
+        <span>mcp-scan</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#why">Why</a>
+        <a href="#how">How it works</a>
+        <a href="#rules">Rules</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="nav-cta" href="https://github.com/529-studio/mcp-scan" target="_blank" rel="noreferrer">
+        <span aria-hidden="true">★</span> GitHub
+      </a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="pill"><span class="dot"></span> Alpha · 10 rules · Apache-2.0</div>
+          <h1>Ship MCP agents<br />without shipping <span class="accent">vulnerabilities.</span></h1>
+          <p class="lede">
+            <strong>mcp-scan</strong> is the first 5-minute security check for MCP servers.
+            It finds unpinned packages, leaked secrets, shell wrappers, broad filesystem roots,
+            wildcard binds, and write access granted by default — then gives you the fix.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="copy-run" type="button">
+              Run the scan <span class="mono" style="font-size:12px;opacity:.7">⌘C</span>
+            </button>
+            <a class="btn btn-secondary" href="https://github.com/529-studio/mcp-scan" target="_blank" rel="noreferrer">
+              Star on GitHub
+            </a>
+          </div>
+          <p class="micro">
+            Runs locally. No signup. No code upload. <code class="mono">npx github:529-studio/mcp-scan .</code>
+          </p>
+        </div>
+
+        <div class="terminal" aria-label="Example mcp-scan output">
+          <div class="term-bar">
+            <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+            <span class="term-title">~/project — mcp-scan</span>
+          </div>
+          <div class="term-body">
+            <div class="term-line"><span class="c-dim">$</span> <span class="c-mint">npx github:529-studio/mcp-scan .</span></div>
+            <div class="term-line"><span class="c-dim">mcp-scan 0.1.0</span></div>
+            <div class="term-line"><span class="c-dim">Target:</span> <span class="c-text">./mcp.json</span></div>
+            <div class="term-line"><span class="c-dim">Servers:</span> <span class="c-text">4</span></div>
+            <div class="term-line"> </div>
+            <div class="term-line"><span class="c-red">[HIGH]</span> <span class="c-text">MCP-003  Secret-like env var is set inline</span></div>
+            <div class="term-line"><span class="c-dim">  server:   filesystem</span></div>
+            <div class="term-line"><span class="c-dim">  evidence: </span><span class="c-text">API_KEY=sk-l…cdef</span></div>
+            <div class="term-line"><span class="c-dim">  fix:      load from a secret manager</span></div>
+            <div class="term-line"> </div>
+            <div class="term-line"><span class="c-red">[HIGH]</span> <span class="c-text">MCP-010  Server is explicitly granted write access</span></div>
+            <div class="term-line"><span class="c-dim">  server:   writer</span></div>
+            <div class="term-line"><span class="c-dim">  fix:      default to read-only</span></div>
+            <div class="term-line"> </div>
+            <div class="term-line"><span class="c-amber">[MEDIUM]</span> <span class="c-text">MCP-002  npx package is not pinned</span></div>
+            <div class="term-line"><span class="c-dim">  server:   filesystem</span></div>
+            <div class="term-line"><span class="c-dim">  fix:      pin @scope/server@1.2.3</span></div>
+            <div class="term-line"> </div>
+            <div class="term-line"><span class="c-text">10 findings (4 high, 6 medium) in 4 servers.</span> <span class="term-cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <div class="rule-strip">
+        <div class="rule-strip-inner">
+          <span><span class="mint">✓</span> Works with any mcp.json</span>
+          <span><span class="mint">✓</span> Claude Desktop · Cursor · VS Code · Claude Code</span>
+          <span><span class="mint">✓</span> JSON · SARIF · CI exit codes</span>
+          <span><span class="mint">✓</span> No remote execution</span>
+        </div>
+      </div>
+    </div>
+
+    <section id="why">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">The problem</div>
+          <h2>MCP gave agents real permissions. Your config didn’t get safer.</h2>
+          <p>
+            An MCP server can read files, query databases, call APIs, and run code.
+            Most teams review the model. Almost nobody reviews the config that gives it the keys.
+          </p>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <div class="card-icon">01</div>
+            <h3>Tool poisoning</h3>
+            <p>A tool description contains hidden instructions. The model reads it as policy, then does something you never approved.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">02</div>
+            <h3>Over-permission</h3>
+            <p>A server can read the whole home directory, bind to <span class="mono">0.0.0.0</span>, or write to production — because that was the default.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">03</div>
+            <h3>Secret leakage</h3>
+            <p>API keys live in <span class="mono">mcp.json</span>, dotfiles, screenshots, and logs. One commit is all it takes.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">How it works</div>
+          <h2>Three steps. No agent required.</h2>
+          <p>Deterministic checks first. Every finding has evidence, impact, and a fix.</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">STEP 01</div>
+            <h3>Point at your config</h3>
+            <p>Pass a directory or a file. <span class="mono">mcp-scan</span> finds <span class="mono">mcp.json</span>, <span class="mono">claude_desktop_config.json</span>, <span class="mono">.cursor/mcp.json</span>, and friends.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">STEP 02</div>
+            <h3>Run 10 deterministic rules</h3>
+            <p>Transport, supply chain, secrets, permissions, network exposure, debug flags, write access. No LLM. No guessing.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">STEP 03</div>
+            <h3>Fix, then prove it</h3>
+            <p>Each finding ships with a concrete fix. Re-run in CI, keep the evidence, answer the security questionnaire.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="rules">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Coverage</div>
+          <h2>10 rules that catch the expensive mistakes.</h2>
+          <p>Small, testable, versioned. New rules are welcome — especially ones backed by a real server and a reproducible fixture.</p>
+        </div>
+        <div class="rules-grid">
+          <div class="rule"><span class="rule-id">MCP-001</span><span>Remote endpoint uses plain HTTP</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-002</span><span>npx/bunx package is not pinned</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-003</span><span>Secret-like env var is set inline</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-004</span><span>Debug/inspector flag is enabled</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-005</span><span>Server is launched through a shell</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-006</span><span>Broad filesystem root</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-007</span><span>Wildcard host or origin</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-008</span><span>Docker image is unpinned</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-009</span><span>Remote endpoint has no visible auth</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-010</span><span>Explicit write access</span><span class="sev sev-high">HIGH</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap split">
+        <div>
+          <div class="section-head" style="margin-bottom:18px">
+            <div class="kicker">Built for the workflow</div>
+            <h2>Security that fits CI, not a separate project.</h2>
+          </div>
+          <div class="feature-list">
+            <div class="feature"><span class="check">✓</span><div><b>Deterministic first</b><p>Every finding is explainable without an LLM. No hallucinations in your security report.</p></div></div>
+            <div class="feature"><span class="check">✓</span><div><b>CI-native</b><p>Text for humans, JSON for scripts, SARIF for GitHub code scanning. Exit codes you can gate on.</p></div></div>
+            <div class="feature"><span class="check">✓</span><div><b>Evidence, not vibes</b><p>Target, evidence, impact, fix. Enough to paste into a ticket or a security questionnaire.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="section-head" style="margin-bottom:18px">
+            <div class="kicker">Safe by design</div>
+            <h2>It never touches your runtime.</h2>
+          </div>
+          <div class="feature-list">
+            <div class="feature"><span class="check">✓</span><div><b>No remote execution</b><p>It reads config. It does not connect to your MCP server, call tools, or run exploits.</p></div></div>
+            <div class="feature"><span class="check">✓</span><div><b>Secrets stay masked</b><p>Reports show a masked value, never the full credential. Nothing is uploaded by default.</p></div></div>
+            <div class="feature"><span class="check">✓</span><div><b>Apache-2.0 core</b><p>Permissive, patent grant, enterprise-friendly. The hosted/enterprise layer is separate.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Who it’s for</div>
+          <h2>For the person who has to answer “is your agent secure?”</h2>
+        </div>
+        <div class="cards">
+          <article class="card"><div class="card-icon">A</div><h3>AI startups</h3><p>You’re shipping an agent to an enterprise buyer and the security questionnaire just landed.</p></article>
+          <article class="card"><div class="card-icon">B</div><h3>Platform teams</h3><p>You maintain the MCP gateway for ten product teams and need a baseline everyone can pass.</p></article>
+          <article class="card"><div class="card-icon">C</div><h3>AppSec &amp; MSSPs</h3><p>You need a repeatable first pass before a human review, with evidence you can hand to a client.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Pricing</div>
+          <h2>Free for the CLI. Paid when you need a paper trail.</h2>
+          <p>The scanner stays open source. The hosted dashboard, policy packs, and enterprise controls are the paid layer.</p>
+        </div>
+        <div class="price-grid">
+          <div class="price featured">
+            <div class="tag">AVAILABLE</div>
+            <h3>Open source</h3>
+            <div class="amount">$0</div>
+            <ul>
+              <li>CLI + 10 rules</li>
+              <li>JSON &amp; SARIF output</li>
+              <li>GitHub Action</li>
+              <li>Community support</li>
+            </ul>
+            <a class="btn btn-primary" href="https://github.com/529-studio/mcp-scan" target="_blank" rel="noreferrer">Get the CLI</a>
+          </div>
+          <div class="price">
+            <div class="tag">WAITLIST</div>
+            <h3>Pro</h3>
+            <div class="amount">$99<span>/mo</span></div>
+            <ul>
+              <li>Hosted scan history</li>
+              <li>5 targets</li>
+              <li>Slack alerts</li>
+              <li>Email support</li>
+            </ul>
+            <a class="btn btn-secondary" href="mailto:contact@529studio.site?subject=mcp-scan%20Pro%20waitlist">Join waitlist</a>
+          </div>
+          <div class="price">
+            <div class="tag">WAITLIST</div>
+            <h3>Team</h3>
+            <div class="amount">$499<span>/mo</span></div>
+            <ul>
+              <li>20 targets</li>
+              <li>SSO + audit log</li>
+              <li>Policy-as-code</li>
+              <li>Jira / Slack</li>
+            </ul>
+            <a class="btn btn-secondary" href="mailto:contact@529studio.site?subject=mcp-scan%20Team%20waitlist">Join waitlist</a>
+          </div>
+          <div class="price">
+            <div class="tag">CUSTOM</div>
+            <h3>Enterprise</h3>
+            <div class="amount">Let’s talk</div>
+            <ul>
+              <li>Self-host</li>
+              <li>Custom rules</li>
+              <li>SLA + DPA</li>
+              <li>Security review</li>
+            </ul>
+            <a class="btn btn-secondary" href="mailto:contact@529studio.site?subject=mcp-scan%20Enterprise">Contact</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">FAQ</div>
+          <h2>The honest answers.</h2>
+        </div>
+        <div class="faq">
+          <details open>
+            <summary>Is this a pentest?</summary>
+            <p>No. It is a deterministic first pass over your MCP configuration. It catches common, high-signal mistakes. It does not replace a human review, dynamic testing, or a pentest.</p>
+          </details>
+          <details>
+            <summary>Does it exploit anything?</summary>
+            <p>No. It does not connect to your MCP server, call tools, or run exploits. It reads config files and reports what it finds.</p>
+          </details>
+          <details>
+            <summary>Does it upload my config?</summary>
+            <p>No. The CLI runs locally. The hosted dashboard is optional and will require explicit opt-in. Secrets are masked in reports.</p>
+          </details>
+          <details>
+            <summary>What about false positives?</summary>
+            <p>Every finding includes evidence so you can judge it. Rules are deliberately narrow. If a rule is noisy, open an issue with the config and we will fix or remove it.</p>
+          </details>
+          <details>
+            <summary>Why Apache-2.0 and not AGPL?</summary>
+            <p>Adoption and enterprise trust matter more than stopping every hosted clone. The moat is the hosted evidence layer, rule upkeep, and support — not the scanner source. Apache-2.0 also includes a patent grant.</p>
+          </details>
+          <details>
+            <summary>Can I add a rule?</summary>
+            <p>Yes. Add a <span class="mono">check(server)</span> function, a fixture, and a docs entry. See <a class="mint" href="https://github.com/529-studio/mcp-scan/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <h2>Find the first three problems in five minutes.</h2>
+            <p>No signup. No upload. Just your config and a terminal.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="copy-run-2" type="button">Copy command</button>
+            <a class="btn btn-secondary" href="https://github.com/529-studio/mcp-scan" target="_blank" rel="noreferrer">View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div>
+        <div class="brand" style="margin-bottom:8px"><span class="brand-mark">›_</span><span>mcp-scan</span></div>
+        <div>Built by <a class="mint" href="https://529studio.site" target="_blank" rel="noreferrer">529 Studio</a>. Apache-2.0.</div>
+        <div style="margin-top:6px">Not affiliated with Anthropic, NVIDIA, or the MCP maintainers.</div>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/529-studio/mcp-scan" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://github.com/529-studio/mcp-scan/blob/main/docs/rules.md" target="_blank" rel="noreferrer">Rules</a>
+        <a href="https://github.com/529-studio/mcp-scan/blob/main/SECURITY.md" target="_blank" rel="noreferrer">Security</a>
+        <a href="mailto:contact@529studio.site">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="copy-toast" id="toast">Command copied</div>
+
+  <script>
+    const command = "npx github:529-studio/mcp-scan .";
+    const toast = document.getElementById("toast");
+
+    async function copyCommand() {
+      try {
+        await navigator.clipboard.writeText(command);
+      } catch {
+        const area = document.createElement("textarea");
+        area.value = command;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+      }
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1400);
+    }
+
+    document.getElementById("copy-run").addEventListener("click", copyCommand);
+    document.getElementById("copy-run-2").addEventListener("click", copyCommand);
+  </script>
+</body>
+</html>

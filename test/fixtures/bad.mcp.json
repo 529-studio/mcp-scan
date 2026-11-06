@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+      "env": {
+        "API_KEY": "example-api-key-not-real",
+        "GITHUB_TOKEN": "example-token-not-real"
+      },
+      "url": "http://0.0.0.0:8080",
+      "headers": {}
+    },
+    "shell": {
+      "command": "bash",
+      "args": ["-c", "echo hello"],
+      "env": {}
+    },
+    "docker": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "mcp/server", "--debug"],
+      "env": {}
+    },
+    "writer": {
+      "command": "node",
+      "args": ["server.js", "--allow-write", "--host", "0.0.0.0"],
+      "env": {}
+    }
+  }
+}

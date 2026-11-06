@@ -1,0 +1,33 @@
+{
+  "name": "@529studio/mcp-scan",
+  "version": "0.1.0",
+  "description": "Security scanner for MCP servers and AI agents. Static checks, CI-friendly output, evidence for audits.",
+  "type": "module",
+  "bin": {
+    "mcp-scan": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node test/run.js",
+    "scan": "node src/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "security",
+    "ai-agents",
+    "static-analysis",
+    "sarif"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/529-studio/mcp-scan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/529-studio/mcp-scan/issues"
+  },
+  "homepage": "https://github.com/529-studio/mcp-scan#readme"
+}
