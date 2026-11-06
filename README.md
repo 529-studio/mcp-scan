@@ -14,7 +14,7 @@ It is deterministic, CI-friendly, and designed to produce **evidence** — not j
 npx github:529-studio/mcp-scan .
 ```
 
-> Alpha: config checks are stable; live tool scanning (`--live` / `--stdio`) is the new M1 layer. Dynamic sandbox testing and runtime policy enforcement are on the roadmap.
+> Alpha: config checks, live tool scanning (`--live` / `--stdio`), and opt-in dynamic sandbox probes are available. Runtime policy enforcement is on the roadmap.
 
 ---
 
@@ -70,9 +70,39 @@ node src/cli.js --stdio node --arg test/fixtures/protocol/server.js
 node src/cli.js . --live filesystem --timeout 15000
 ```
 
-Live mode performs the MCP `initialize` handshake, reads `tools/list` with cursor pagination, and reports tool-level findings. It does not execute tools.
+Live mode performs the MCP `initialize` handshake, reads `tools/list` with cursor pagination, and reports tool-level findings. Static live mode does not execute tools.
 
-`--stdio` runs the command you provide. Only scan servers you trust, and prefer a pinned binary or package.
+### Run dynamic probes in a sandbox
+
+```bash
+# Docker is the default sandbox
+node src/cli.js . --live filesystem --dynamic
+
+# Local adapter for tests or a machine without Docker (not isolated)
+node src/cli.js . --live filesystem --dynamic --sandbox process
+
+# Opt a write tool into the probe set
+node src/cli.js . --live filesystem --dynamic --allow-tool read_file
+
+# Write an evidence bundle
+node src/cli.js . --live filesystem --dynamic --evidence ./mcp-scan-evidence.json
+```
+
+Dynamic mode runs the server inside a sandbox, calls a small set of read-only tools with canary inputs, and reports host reads, writes, secret leaks, instruction-like output, and timeouts. It is opt-in and never enabled by default.
+
+The server's working directory is the canary directory. Use an absolute command path (for example `$PWD/server.js`) or a packaged image; a relative path will not resolve from the canary directory.
+
+Canaries are created under `~/.mcp-scan/canary-*` by default so Docker Desktop and colima can bind-mount them. Override the base with `MCP_SCAN_CANARY_BASE`.
+
+Docker mode requires the server command to exist inside the sandbox image. `npx` installs are blocked by the default `--network none`; use a prebuilt image, or use `--sandbox process` only for trusted servers.
+
+Run the end-to-end Docker check with:
+
+```bash
+make smoke-docker
+```
+
+`--stdio` runs the command you provide. Only scan servers you trust, and prefer a pinned binary or package. `--sandbox process` does not isolate the child; use Docker for untrusted servers.
 
 If you pass a directory, `mcp-scan` looks for:
 
@@ -117,6 +147,16 @@ config/mcp.json
 | `MCP-018` | Tool contains hidden or encoded content | High |
 | `MCP-019` | `readOnlyHint` contradicts the tool | High |
 | `MCP-020` | Tool has no usable description | Low |
+
+### Dynamic rules (sandboxed)
+
+| ID | Check | Severity |
+|---|---|---|
+| `DYN-001` | Tool read a host canary file | High |
+| `DYN-002` | Tool modified a file outside its output directory | High |
+| `DYN-003` | Tool leaked a canary secret | High |
+| `DYN-004` | Tool output contains instruction-like content | High |
+| `DYN-005` | Tool exceeded the time budget | Medium |
 
 See [docs/rules.md](docs/rules.md) for the full rule reference.
 
@@ -233,7 +273,7 @@ Use `--fail-on none` for a report-only run.
 - [x] GitHub Action workflow
 - [x] MCP protocol handshake and tool-definition parsing
 - [x] Tool-level rules (`MCP-011`..`MCP-020`)
-- [ ] Sandboxed dynamic tests (prompt injection, tool abuse)
+- [x] Sandboxed dynamic probes (`DYN-001`..`DYN-005`)
 - [ ] Rule packs (auth, data flow, supply chain)
 - [ ] Hosted dashboard + evidence retention
 - [ ] Policy-as-code (OPA/Rego)
@@ -243,14 +283,15 @@ Use `--fail-on none` for a report-only run.
 
 ## Status
 
-Alpha. The current release has two layers:
+Alpha. The current release has three layers:
 
 - **Config scan:** transport, secrets, supply chain, permissions, and write access.
 - **Live tool scan:** `initialize` + `tools/list`, then tool-description and schema rules.
+- **Dynamic probes:** opt-in, sandboxed tool calls with disposable canaries.
 
-It still does not run a sandbox, execute tools, or test prompt injection dynamically. It is a first pass, not a pentest.
+It does not exploit a vulnerability, fuzz every tool, or replace a pentest. Dynamic mode is a first behavioral pass; use it on servers you own.
 
-Use it in CI, then add dynamic testing and human review.
+Use it in CI, then add human review.
 
 ---
 
@@ -280,6 +321,7 @@ If you need a different license for a commercial embedding, open an issue or con
 ## Repository operations
 
 - `make check` — tests, docs gate, and public-safety scan.
+- `make smoke-docker` — end-to-end Docker dynamic-mode smoke test.
 - `AGENTS.md` — project rules and the 529 Studio standards.
 - `docs/ONBOARDING.md` — how the repo is organized.
 - `.agents/skills/` — MCP security review, rule authoring, OSS GTM.

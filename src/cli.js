@@ -6,6 +6,11 @@ import { fileURLToPath } from "node:url";
 import { rules, scanServer, severityRank, SEVERITIES } from "./rules.js";
 import { connectStdio } from "./protocol.js";
 import { scanTools } from "./tool-rules.js";
+import { createSandbox, SANDBOX_MODES } from "./sandbox/runner.js";
+import { cleanupCanaryDir, createCanaryDir } from "./dynamic/canary.js";
+import { probeTools } from "./dynamic/probe.js";
+import { DYNAMIC_RULES, evaluateDynamic } from "./dynamic/rules.js";
+import { buildEvidence, writeEvidence } from "./dynamic/evidence.js";
 
 const pkg = JSON.parse(
   fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -41,6 +46,13 @@ Options:
       --stdio <cmd>    Connect to an arbitrary stdio server command
       --arg <value>    Argument for --stdio (repeatable)
       --timeout <ms>   Handshake and request timeout (default: 10000)
+      --dynamic        Run dynamic probes in a sandbox (requires --live/--stdio)
+      --sandbox <mode> docker | process | none (default: docker)
+      --sandbox-image <image>  Docker image (default: node:20-alpine)
+      --allow-network  Allow network in the sandbox (never with process)
+      --max-tools <n>  Maximum tools to probe (default: 5)
+      --allow-tool <name>  Probe this tool even if it is not read-only
+      --evidence <path>  Write a JSON evidence bundle
   -q, --quiet          Only print the summary.
   -h, --help           Show this help.
   -v, --version        Show the version.
@@ -51,9 +63,12 @@ Examples:
   mcp-scan . --format sarif --fail-on medium
   mcp-scan . --live filesystem
   mcp-scan --stdio node --arg test/fixtures/protocol/server.js
+  mcp-scan . --live filesystem --dynamic --sandbox docker
+  mcp-scan --stdio node --arg "$PWD/test/fixtures/dynamic/server.js" --dynamic --sandbox process
   npx github:529-studio/mcp-scan .
 
   Live mode runs the server command you provide. Only scan servers you trust.
+  Dynamic mode executes tools inside the sandbox. Use it only on servers you own.
 
 Exit codes:
   0  no findings at or above --fail-on
@@ -71,6 +86,13 @@ const parseArgs = (argv) => {
     stdio: null,
     stdioArgs: [],
     timeoutMs: 10_000,
+    dynamic: false,
+    sandbox: "docker",
+    sandboxImage: "node:20-alpine",
+    allowNetwork: false,
+    maxTools: 5,
+    allowTools: [],
+    evidence: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -138,6 +160,59 @@ const parseArgs = (argv) => {
       options.timeoutMs = Number(arg.split("=")[1]);
       continue;
     }
+    if (arg === "--dynamic") {
+      options.dynamic = true;
+      continue;
+    }
+    if (arg === "--sandbox") {
+      options.sandbox = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--sandbox=")) {
+      options.sandbox = arg.split("=")[1];
+      continue;
+    }
+    if (arg === "--sandbox-image") {
+      options.sandboxImage = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--sandbox-image=")) {
+      options.sandboxImage = arg.split("=")[1];
+      continue;
+    }
+    if (arg === "--allow-network") {
+      options.allowNetwork = true;
+      continue;
+    }
+    if (arg === "--max-tools") {
+      options.maxTools = Number(argv[index + 1]);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--max-tools=")) {
+      options.maxTools = Number(arg.split("=")[1]);
+      continue;
+    }
+    if (arg === "--allow-tool") {
+      options.allowTools.push(argv[index + 1]);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--allow-tool=")) {
+      options.allowTools.push(arg.split("=")[1]);
+      continue;
+    }
+    if (arg === "--evidence") {
+      options.evidence = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--evidence=")) {
+      options.evidence = arg.split("=")[1];
+      continue;
+    }
     if (arg === "-q" || arg === "--quiet") {
       options.quiet = true;
       continue;
@@ -171,6 +246,37 @@ const parseArgs = (argv) => {
   }
   if (!Number.isInteger(options.timeoutMs) || options.timeoutMs <= 0) {
     throw new Error("--timeout must be a positive integer");
+  }
+  if (options.dynamic && !options.live && !options.stdio) {
+    throw new Error("--dynamic requires --live or --stdio");
+  }
+  if (!SANDBOX_MODES.includes(options.sandbox)) {
+    throw new Error(`Invalid --sandbox: ${options.sandbox}`);
+  }
+  if (!options.sandboxImage) {
+    throw new Error("--sandbox-image requires an image name");
+  }
+  if (
+    !Number.isInteger(options.maxTools) ||
+    options.maxTools < 1 ||
+    options.maxTools > 20
+  ) {
+    throw new Error("--max-tools must be an integer between 1 and 20");
+  }
+  if (options.allowNetwork && ["process", "none"].includes(options.sandbox)) {
+    throw new Error("--allow-network is not supported with the process sandbox");
+  }
+  if (options.allowTools.some((name) => !name)) {
+    throw new Error("--allow-tool requires a tool name");
+  }
+  if (options.allowTools.length > 0 && !options.dynamic) {
+    throw new Error("--allow-tool requires --dynamic");
+  }
+  if (options.evidence === undefined) {
+    throw new Error("--evidence requires a path");
+  }
+  if (options.evidence && !options.dynamic) {
+    throw new Error("--evidence requires --dynamic");
   }
 
   return options;
@@ -288,7 +394,7 @@ const artifactUri = (target) =>
     : path.relative(process.cwd(), target) || target;
 
 const buildSarif = ({ target, findings }) => {
-  const ruleMetadata = rules.map((rule) => ({
+  const ruleMetadata = [...rules, ...DYNAMIC_RULES].map((rule) => ({
     id: rule.id,
     name: rule.title,
     shortDescription: { text: rule.title },
@@ -405,28 +511,87 @@ const scanLive = async (options) => {
     target = `${configPath}#${options.live}`;
   }
 
-  const client = connectStdio({
-    command: serverConfig.command,
-    args: Array.isArray(serverConfig.args) ? serverConfig.args : [],
-    env:
-      serverConfig.env && typeof serverConfig.env === "object"
-        ? serverConfig.env
-        : {},
-    cwd: process.cwd(),
-    timeoutMs: options.timeoutMs,
-  });
+  const env =
+    serverConfig.env && typeof serverConfig.env === "object"
+      ? serverConfig.env
+      : {};
+  const args = Array.isArray(serverConfig.args) ? serverConfig.args : [];
 
+  let client;
+  let canary;
   let tools = [];
+  let dynamicFindings = [];
+
   try {
-    await client.initialize();
-    tools = await client.listTools();
+    if (options.dynamic) {
+      canary = createCanaryDir();
+
+      if (options.sandbox === "process" || options.sandbox === "none") {
+        console.error(
+          "mcp-scan: warning: dynamic mode is not isolated; use --sandbox docker for untrusted servers",
+        );
+      }
+
+      const sandbox = createSandbox({
+        mode: options.sandbox,
+        canaryDir: canary.dir,
+        allowNetwork: options.allowNetwork,
+        image: options.sandboxImage,
+        timeoutMs: options.timeoutMs,
+        env,
+      });
+
+      client = sandbox.connect({
+        command: serverConfig.command,
+        args,
+        env,
+      });
+
+      await client.initialize();
+      tools = await client.listTools();
+
+      const probes = await probeTools(client, tools, canary, {
+        maxTools: options.maxTools,
+        allowTools: options.allowTools,
+        timeoutMs: options.timeoutMs,
+      });
+
+      dynamicFindings = evaluateDynamic(serverName, probes, canary);
+
+      if (options.evidence) {
+        writeEvidence(
+          options.evidence,
+          buildEvidence({
+            server: serverName,
+            sandbox: options.sandbox,
+            allowNetwork: options.allowNetwork,
+            probes,
+            findings: dynamicFindings,
+            canary,
+          }),
+        );
+      }
+    } else {
+      client = connectStdio({
+        command: serverConfig.command,
+        args,
+        env,
+        cwd: process.cwd(),
+        timeoutMs: options.timeoutMs,
+      });
+
+      await client.initialize();
+      tools = await client.listTools();
+    }
   } finally {
-    await client.close();
+    if (client) await client.close();
+    cleanupCanaryDir(canary?.dir);
   }
 
   const findings = [
     ...scanServer(serverName, serverConfig),
     ...scanTools(serverName, tools),
+    ...dynamicFindings,
   ];
   sortFindings(findings);
 

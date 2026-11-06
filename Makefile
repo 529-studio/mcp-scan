@@ -1,11 +1,12 @@
-.PHONY: test scan docs-lint public-safety check help
+.PHONY: test scan docs-lint public-safety smoke-docker check help
 
 help:
 	@echo "make test          Run the test suite"
 	@echo "make scan          Scan the repository's own MCP config"
 	@echo "make docs-lint     Check docs budgets, links, lessons index"
 	@echo "make public-safety Check for secrets and internal hostnames"
-	@echo "make check         All of the above"
+	@echo "make smoke-docker  Run the Docker dynamic-mode smoke test"
+	@echo "make check         Test, docs-lint, and public-safety"
 
 test:
 	node test/run.js
@@ -18,5 +19,8 @@ docs-lint:
 
 public-safety:
 	bash scripts/check-public-safe.sh
+
+smoke-docker:
+	bash scripts/smoke-docker.sh
 
 check: test docs-lint public-safety

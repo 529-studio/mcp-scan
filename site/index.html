@@ -281,13 +281,14 @@
     <section class="hero">
       <div class="wrap hero-grid">
         <div>
-          <div class="pill"><span class="dot"></span> Alpha · 20 rules · Apache-2.0</div>
+          <div class="pill"><span class="dot"></span> Alpha · 20 static + dynamic checks · Apache-2.0</div>
           <h1>Ship MCP agents<br />without shipping <span class="accent">vulnerabilities.</span></h1>
           <p class="lede">
             <strong>mcp-scan</strong> is the first 5-minute security check for MCP servers.
             It finds unpinned packages, leaked secrets, shell wrappers, broad filesystem roots,
             wildcard binds, and write access granted by default. In live mode it also reads
-            <span class="mono">tools/list</span> and flags dangerous descriptions, schemas, and annotations — then gives you the fix.
+            <span class="mono">tools/list</span> and flags dangerous descriptions, schemas, and annotations.
+            Add <span class="mono">--dynamic</span> to probe read-only tools inside a sandbox — then it gives you the fix.
           </p>
           <div class="hero-actions">
             <button class="btn btn-primary" id="copy-run" type="button">
@@ -388,8 +389,8 @@
           </div>
           <div class="step">
             <div class="step-num">STEP 02</div>
-            <h3>Run 20 deterministic rules</h3>
-            <p>Transport, supply chain, secrets, permissions, network exposure, debug flags, write access — plus tool descriptions, schemas, hidden content, and annotations in live mode. No LLM. No guessing.</p>
+            <h3>Run 20 static rules + dynamic probes</h3>
+            <p>Transport, supply chain, secrets, permissions, network exposure, debug flags, write access — plus tool descriptions, schemas, hidden content, and annotations. Add <span class="mono">--dynamic</span> to call read-only tools inside a sandbox with disposable canaries.</p>
           </div>
           <div class="step">
             <div class="step-num">STEP 03</div>
@@ -404,8 +405,8 @@
       <div class="wrap">
         <div class="section-head">
           <div class="kicker">Coverage</div>
-          <h2>20 rules that catch the expensive mistakes.</h2>
-          <p>Ten config rules, ten tool rules. Small, testable, versioned. New rules are welcome — especially ones backed by a real server and a reproducible fixture.</p>
+          <h2>20 static rules that catch the expensive mistakes.</h2>
+          <p>Ten config rules, ten tool rules. Small, testable, versioned. Dynamic mode adds five behavioral checks on top.</p>
         </div>
         <div class="rules-grid">
           <div class="rule"><span class="rule-id">MCP-001</span><span>Remote endpoint uses plain HTTP</span><span class="sev sev-high">HIGH</span></div>
@@ -436,6 +437,19 @@
           <div class="rule"><span class="rule-id">MCP-018</span><span>Hidden or encoded content</span><span class="sev sev-high">HIGH</span></div>
           <div class="rule"><span class="rule-id">MCP-019</span><span>readOnlyHint contradiction</span><span class="sev sev-high">HIGH</span></div>
           <div class="rule"><span class="rule-id">MCP-020</span><span>No usable description</span><span class="sev sev-low">LOW</span></div>
+        </div>
+
+        <div class="section-head" style="margin-top:34px;margin-bottom:18px">
+          <div class="kicker">Dynamic mode · sandboxed</div>
+          <h2 style="font-size:clamp(22px,2.6vw,30px)">Five behavioral checks for the tools a human would test by hand.</h2>
+          <p>Opt-in <span class="mono">--dynamic</span>. Docker is the default sandbox; no network, read-only root, disposable canaries.</p>
+        </div>
+        <div class="rules-grid">
+          <div class="rule"><span class="rule-id">DYN-001</span><span>Host canary file read</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">DYN-002</span><span>Write outside the output directory</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">DYN-003</span><span>Canary secret leaked</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">DYN-004</span><span>Instruction-like output</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">DYN-005</span><span>Time budget exceeded</span><span class="sev sev-med">MED</span></div>
         </div>
       </div>
     </section>
@@ -494,7 +508,7 @@
             <h3>Open source</h3>
             <div class="amount">$0</div>
             <ul>
-              <li>CLI + 20 rules</li>
+              <li>CLI + 25 checks</li>
               <li>JSON &amp; SARIF output</li>
               <li>GitHub Action</li>
               <li>Community support</li>
@@ -550,15 +564,15 @@
         <div class="faq">
           <details open>
             <summary>Is this a pentest?</summary>
-            <p>No. It is a deterministic first pass over your MCP configuration and, in live mode, your tool manifest. It catches common, high-signal mistakes. It does not replace a human review, dynamic testing, or a pentest.</p>
+            <p>No. It is a deterministic first pass over your MCP configuration, your tool manifest, and — when you opt in — a sandboxed behavioral probe. It catches common, high-signal mistakes. It does not replace a human review, fuzzing, or a pentest.</p>
           </details>
           <details>
             <summary>Does it connect to a live server?</summary>
-            <p>Only when you ask. <span class="mono">--live</span> and <span class="mono">--stdio</span> perform the MCP <span class="mono">initialize</span> handshake and read <span class="mono">tools/list</span>. It does not call a tool, execute a tool, or run an exploit.</p>
+            <p>Only when you ask. <span class="mono">--live</span> and <span class="mono">--stdio</span> perform the MCP <span class="mono">initialize</span> handshake and read <span class="mono">tools/list</span>. Add <span class="mono">--dynamic</span> to call read-only tools with canaries inside a sandbox. It never exploits a finding.</p>
           </details>
           <details>
             <summary>Does it exploit anything?</summary>
-            <p>No. It never calls a tool or runs an exploit. Live mode reads the tool manifest and reports what it finds.</p>
+            <p>No. It never exploits a finding. Static and live modes do not call tools. Dynamic mode calls a small set of read-only tools with disposable canaries inside a sandbox, and only when you opt in.</p>
           </details>
           <details>
             <summary>Does it upload my config?</summary>

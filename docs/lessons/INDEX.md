@@ -14,3 +14,6 @@ One row per engineering lesson. The full text lives in the linked file; this ind
 | 8 | Landing pages must not sell unbuilt features | Label roadmap and waitlist items; never imply availability. | [L08](L08-landing-pages-must-not-sell-unbuilt-features.md) |
 | 9 | Cursor pagination must advance by offset | A cursor is a position, not a boolean; always return a new cursor or stop. | [L09](L09-cursor-pagination-must-advance-by-offset.md) |
 | 10 | A live scanner must own process lifecycle | Every live scan needs a timeout, a kill path, and pending-request rejection. | [L10](L10-a-live-scanner-must-own-process-lifecycle.md) |
+| 11 | Canary evidence must mask every derived value | Mask canary values and canary-derived inputs, not just the base secrets. | [L11](L11-canary-evidence-must-mask-every-derived-value.md) |
+| 12 | Dynamic mode must fail closed | If the sandbox cannot start, exit; never fall back to the host silently. | [L12](L12-dynamic-mode-must-fail-closed.md) |
+| 13 | Bind mounts must live in a shared path | Put canaries under the home directory; macOS `/var/folders` is not shared with Docker. | [L13](L13-bind-mounts-must-live-in-a-shared-path.md) |
