@@ -1,5 +1,7 @@
 # GTM plan — mcp-scan
 
+**Repo:** <https://github.com/529-studio/mcp-scan>
+**License:** Apache-2.0 for the core; commercial for the hosted/enterprise layer.
 **Motion:** open-source + public report + vendor badge. No cold calls.
 
 **Goal (90 days):** 500 GitHub stars, 100 active installs, 3 design partners, 3 paid accounts, 1 public “State of MCP Security” report, 3 vendor badges.
