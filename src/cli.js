@@ -4,6 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rules, scanServer, severityRank, SEVERITIES } from "./rules.js";
+import { connectStdio } from "./protocol.js";
+import { scanTools } from "./tool-rules.js";
 
 const pkg = JSON.parse(
   fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -35,6 +37,10 @@ Options:
       --fail-on <sev>  none | low | medium | high | critical
                        Exit 1 when a finding at or above this severity exists.
                        (default: high)
+      --live <server>  Connect to a stdio server from the config and scan tools
+      --stdio <cmd>    Connect to an arbitrary stdio server command
+      --arg <value>    Argument for --stdio (repeatable)
+      --timeout <ms>   Handshake and request timeout (default: 10000)
   -q, --quiet          Only print the summary.
   -h, --help           Show this help.
   -v, --version        Show the version.
@@ -43,7 +49,11 @@ Examples:
   mcp-scan .
   mcp-scan ./mcp.json --format json
   mcp-scan . --format sarif --fail-on medium
+  mcp-scan . --live filesystem
+  mcp-scan --stdio node --arg test/fixtures/protocol/server.js
   npx github:529-studio/mcp-scan .
+
+  Live mode runs the server command you provide. Only scan servers you trust.
 
 Exit codes:
   0  no findings at or above --fail-on
@@ -57,6 +67,10 @@ const parseArgs = (argv) => {
     format: "text",
     failOn: "high",
     quiet: false,
+    live: null,
+    stdio: null,
+    stdioArgs: [],
+    timeoutMs: 10_000,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -88,6 +102,42 @@ const parseArgs = (argv) => {
       options.failOn = arg.split("=")[1];
       continue;
     }
+    if (arg === "--live") {
+      options.live = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--live=")) {
+      options.live = arg.split("=")[1];
+      continue;
+    }
+    if (arg === "--stdio") {
+      options.stdio = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--stdio=")) {
+      options.stdio = arg.split("=")[1];
+      continue;
+    }
+    if (arg === "--arg") {
+      options.stdioArgs.push(argv[index + 1]);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--arg=")) {
+      options.stdioArgs.push(arg.split("=")[1]);
+      continue;
+    }
+    if (arg === "--timeout") {
+      options.timeoutMs = Number(argv[index + 1]);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--timeout=")) {
+      options.timeoutMs = Number(arg.split("=")[1]);
+      continue;
+    }
     if (arg === "-q" || arg === "--quiet") {
       options.quiet = true;
       continue;
@@ -103,6 +153,24 @@ const parseArgs = (argv) => {
   }
   if (!["none", ...SEVERITIES].includes(options.failOn)) {
     throw new Error(`Invalid --fail-on: ${options.failOn}`);
+  }
+  if (options.live !== null && !options.live) {
+    throw new Error("--live requires a server name");
+  }
+  if (options.stdio !== null && !options.stdio) {
+    throw new Error("--stdio requires a command");
+  }
+  if (options.live && options.stdio) {
+    throw new Error("--live and --stdio are mutually exclusive");
+  }
+  if (options.stdio && options.stdioArgs.some((value) => !value)) {
+    throw new Error("--arg requires a value");
+  }
+  if (options.stdioArgs.length > 0 && !options.stdio) {
+    throw new Error("--arg requires --stdio");
+  }
+  if (!Number.isInteger(options.timeoutMs) || options.timeoutMs <= 0) {
+    throw new Error("--timeout must be a positive integer");
   }
 
   return options;
@@ -214,6 +282,11 @@ const printText = ({ target, servers, findings, quiet }) => {
   );
 };
 
+const artifactUri = (target) =>
+  target.startsWith("stdio:") || target.includes("#")
+    ? target
+    : path.relative(process.cwd(), target) || target;
+
 const buildSarif = ({ target, findings }) => {
   const ruleMetadata = rules.map((rule) => ({
     id: rule.id,
@@ -245,7 +318,7 @@ const buildSarif = ({ target, findings }) => {
         },
         artifacts: [
           {
-            location: { uri: path.relative(process.cwd(), target) || target },
+            location: { uri: artifactUri(target) },
           },
         ],
         results: findings.map((finding) => ({
@@ -258,7 +331,7 @@ const buildSarif = ({ target, findings }) => {
             {
               physicalLocation: {
                 artifactLocation: {
-                  uri: path.relative(process.cwd(), target) || target,
+                  uri: artifactUri(target),
                 },
                 region: { startLine: 1, startColumn: 1 },
               },
@@ -276,7 +349,133 @@ const buildSarif = ({ target, findings }) => {
   };
 };
 
-const main = () => {
+const sortFindings = (findings) => {
+  findings.sort(
+    (a, b) =>
+      severityRank(b.severity) - severityRank(a.severity) ||
+      a.id.localeCompare(b.id) ||
+      a.server.localeCompare(b.server),
+  );
+};
+
+const scanConfig = (options) => {
+  const configPath = findConfig(options.target);
+  const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  const servers = extractServers(config);
+
+  const findings = Object.entries(servers).flatMap(([name, server]) =>
+    scanServer(name, server && typeof server === "object" ? server : {}),
+  );
+
+  sortFindings(findings);
+
+  return {
+    target: configPath,
+    servers: Object.keys(servers).length,
+    findings,
+  };
+};
+
+const scanLive = async (options) => {
+  let target;
+  let serverName;
+  let serverConfig;
+
+  if (options.stdio) {
+    serverName = "stdio";
+    serverConfig = { command: options.stdio, args: options.stdioArgs };
+    target = `stdio:${options.stdio}`;
+  } else {
+    const configPath = findConfig(options.target);
+    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    const servers = extractServers(config);
+
+    serverConfig = servers[options.live];
+
+    if (!serverConfig || typeof serverConfig !== "object") {
+      throw new Error(`live server not found: ${options.live}`);
+    }
+    if (!serverConfig.command) {
+      throw new Error(
+        `live HTTP scan is not implemented for "${options.live}"; use the config scan`,
+      );
+    }
+
+    serverName = options.live;
+    target = `${configPath}#${options.live}`;
+  }
+
+  const client = connectStdio({
+    command: serverConfig.command,
+    args: Array.isArray(serverConfig.args) ? serverConfig.args : [],
+    env:
+      serverConfig.env && typeof serverConfig.env === "object"
+        ? serverConfig.env
+        : {},
+    cwd: process.cwd(),
+    timeoutMs: options.timeoutMs,
+  });
+
+  let tools = [];
+  try {
+    await client.initialize();
+    tools = await client.listTools();
+  } finally {
+    await client.close();
+  }
+
+  const findings = [
+    ...scanServer(serverName, serverConfig),
+    ...scanTools(serverName, tools),
+  ];
+  sortFindings(findings);
+
+  return {
+    target,
+    servers: 1,
+    findings,
+  };
+};
+
+const printResult = (result, options) => {
+  if (options.format === "json") {
+    console.log(
+      JSON.stringify(
+        {
+          tool: "mcp-scan",
+          version: VERSION,
+          target: result.target,
+          servers: result.servers,
+          findings: result.findings,
+          summary: countBySeverity(result.findings),
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
+  if (options.format === "sarif") {
+    console.log(
+      JSON.stringify(
+        buildSarif({ target: result.target, findings: result.findings }),
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
+  printText({
+    target: result.target,
+    servers: result.servers,
+    findings: result.findings,
+    quiet: options.quiet,
+  });
+};
+
+const main = async () => {
   let options;
 
   try {
@@ -297,64 +496,26 @@ const main = () => {
     return;
   }
 
-  let configPath;
-  let config;
-  let servers;
-
+  let result;
   try {
-    configPath = findConfig(options.target);
-    config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    servers = extractServers(config);
+    result =
+      options.live || options.stdio
+        ? await scanLive(options)
+        : scanConfig(options);
   } catch (error) {
     console.error(`mcp-scan: ${error.message}`);
     process.exitCode = 2;
     return;
   }
 
-  const findings = Object.entries(servers).flatMap(([name, server]) =>
-    scanServer(name, server && typeof server === "object" ? server : {}),
-  );
+  printResult(result, options);
 
-  findings.sort(
-    (a, b) =>
-      severityRank(b.severity) - severityRank(a.severity) ||
-      a.id.localeCompare(b.id) ||
-      a.server.localeCompare(b.server),
-  );
-
-  const serverCount = Object.keys(servers).length;
-
-  if (options.format === "json") {
-    console.log(
-      JSON.stringify(
-        {
-          tool: "mcp-scan",
-          version: VERSION,
-          target: configPath,
-          servers: serverCount,
-          findings,
-          summary: countBySeverity(findings),
-        },
-        null,
-        2,
-      ),
-    );
-  } else if (options.format === "sarif") {
-    console.log(
-      JSON.stringify(buildSarif({ target: configPath, findings }), null, 2),
-    );
-  } else {
-    printText({
-      target: configPath,
-      servers: serverCount,
-      findings,
-      quiet: options.quiet,
-    });
-  }
-
-  if (shouldFail(findings, options.failOn)) {
+  if (shouldFail(result.findings, options.failOn)) {
     process.exitCode = 1;
   }
 };
 
-main();
+main().catch((error) => {
+  console.error(`mcp-scan: ${error.message}`);
+  process.exitCode = 2;
+});

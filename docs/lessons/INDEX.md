@@ -12,3 +12,5 @@ One row per engineering lesson. The full text lives in the linked file; this ind
 | 6 | Unpinned npx is a supply-chain risk | Pin exact versions for every MCP server and Docker image. | [L06](L06-unpinned-npx-is-a-supply-chain-risk.md) |
 | 7 | Tool descriptions are untrusted input | Treat tool descriptions, resources, and outputs as untrusted text. | [L07](L07-tool-descriptions-are-untrusted-input.md) |
 | 8 | Landing pages must not sell unbuilt features | Label roadmap and waitlist items; never imply availability. | [L08](L08-landing-pages-must-not-sell-unbuilt-features.md) |
+| 9 | Cursor pagination must advance by offset | A cursor is a position, not a boolean; always return a new cursor or stop. | [L09](L09-cursor-pagination-must-advance-by-offset.md) |
+| 10 | A live scanner must own process lifecycle | Every live scan needs a timeout, a kill path, and pending-request rejection. | [L10](L10-a-live-scanner-must-own-process-lifecycle.md) |

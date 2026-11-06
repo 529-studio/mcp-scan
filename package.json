@@ -1,6 +1,6 @@
 {
   "name": "@529studio/mcp-scan",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Security scanner for MCP servers and AI agents. Static checks, CI-friendly output, evidence for audits.",
   "type": "module",
   "bin": {

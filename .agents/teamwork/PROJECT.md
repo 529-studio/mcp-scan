@@ -40,7 +40,7 @@ docs/             plan, architecture, lessons, MCP setup
 | # | Name | Scope | Dependencies | Status |
 |---|---|---|---|---|
 | M0 | Agent ops bootstrap | AGENTS, skills, lessons, tools, subagents | none | DONE |
-| M1 | Protocol-aware scanner | handshake, parser, 10 rules, tests | M0 | ACTIVE |
+| M1 | Protocol-aware scanner | handshake, parser, 10 rules, tests | M0 | IMPLEMENTED (review pending) |
 | M2 | Dynamic sandbox | isolated runner, canary prompts | M1 | PENDING |
 | M3 | Public report + badge | 20 configs, report, badge | M1 | PENDING |
 

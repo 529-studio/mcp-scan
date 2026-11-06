@@ -6,7 +6,7 @@
 
 ## 1. What this is
 
-`mcp-scan` reads an MCP configuration (for example `mcp.json`, `claude_desktop_config.json`, `.cursor/mcp.json`) and reports deterministic security findings. It does not connect to a live server yet, does not exploit, and does not upload code.
+`mcp-scan` reads an MCP configuration (for example `mcp.json`, `claude_desktop_config.json`, `.cursor/mcp.json`) and reports deterministic security findings. In live mode (`--live` or `--stdio`) it connects to a local stdio server to read `tools/list`. It does not execute tools, exploit, or upload code.
 
 ---
 
