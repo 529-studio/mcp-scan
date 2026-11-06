@@ -57,6 +57,7 @@ scripts/check-public-safe.sh
 Read `AGENTS.md`. The short version:
 
 - English-only code and docs, no emojis.
+- `dev` is the default branch and deployment branch; `main` is the stable release branch.
 - No direct push to `main` or `dev`; PR only.
 - No secrets in the tree; use `.mcp.example.jsonc` placeholders.
 - Every rule needs a fixture, a docs entry, and a test.

@@ -189,7 +189,7 @@ name: mcp-scan
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [dev, main]
 
 jobs:
   scan:
@@ -270,6 +270,12 @@ The hosted dashboard, SSO, policy packs, runtime guard, and enterprise connector
 If you need a different license for a commercial embedding, open an issue or contact the maintainers.
 
 ---
+
+## Branching and deployment
+
+- `dev` is the default branch and the deployment branch.
+- `main` is the stable release branch. Promote `dev` to `main` with a PR when a release is cut.
+- Open feature PRs against `dev`. Direct pushes to `dev` or `main` are blocked by the branch guard.
 
 ## Repository operations
 

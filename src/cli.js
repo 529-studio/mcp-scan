@@ -293,7 +293,7 @@ const buildSarif = ({ target, findings }) => {
     name: rule.title,
     shortDescription: { text: rule.title },
     fullDescription: { text: `${rule.ref}: ${rule.title}` },
-    helpUri: `https://github.com/529-studio/mcp-scan/blob/main/docs/rules.md#${rule.id.toLowerCase()}`,
+    helpUri: `https://github.com/529-studio/mcp-scan/blob/dev/docs/rules.md#${rule.id.toLowerCase()}`,
     properties: { tags: ["security", "mcp", rule.ref] },
   }));
 
