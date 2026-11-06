@@ -46,6 +46,7 @@ Before planning (`/plan`) or implementing any task, feature, or bugfix, the agen
 
 ## 3. Git flow
 
+- `dev` is the default branch and the deployment branch. `main` is the stable release branch.
 - Direct pushes to `main` and `dev` are prohibited. Use `feat/*`, `fix/*`, `docs/*`, or `chore/*` branches.
 - Open a PR against `dev`. AI agents must never auto-merge.
 - PR descriptions start with `Close #<issue-number>` when the PR resolves an issue.

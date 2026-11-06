@@ -1,33 +1,35 @@
 # Handoff — Worker CLI
 
-**Status:** PENDING
+**Status:** DONE (manual fallback; subagent quota blocked)
 
-## 1. Observation
+## Files
 
-- What was requested.
-- What was read.
-- What was changed.
+- `src/targets/stdio.js` — spawn, line reader, request timeout, close, stderr.
+- `src/protocol.js` — `initialize`, `tools/list`, pagination cap.
+- `src/cli.js` — `--live`, `--stdio`, `--arg`, `--timeout`, live output.
+- `test/protocol.test.js` — handshake, pagination, JSON-RPC error, timeout.
+- `test/fixtures/protocol/server.js` — fixture MCP server with `--hang`.
 
-## 2. Logic Chain
+## API
 
-- Why this approach.
-- Trade-offs.
-- Alternatives considered.
+```js
+const client = connectStdio({ command, args, env, cwd, timeoutMs });
+await client.initialize();
+const tools = await client.listTools();
+await client.close();
+```
 
-## 3. Caveats
+## Verification
 
-- Known limitations.
-- False positives.
-- Open questions.
+```text
+$ node test/protocol.test.js
+ok — protocol initialize, pagination, error, timeout
 
-## 4. Conclusion
+$ node src/cli.js --stdio node --arg test/fixtures/protocol/server.js --format json --fail-on none
+16 findings (1 low, 8 medium, 7 high) in 1 server.
+```
 
-- What is done.
-- What is not done.
-- Recommendation.
+## Caveats
 
-## 5. Verification
-
-- Commands run.
-- Output summary.
-- Evidence paths.
+- HTTP/SSE transport is not implemented. `--live` on a `url` server exits 2 with a clear message.
+- `--stdio` runs the command the user provides; the README tells users to scan only trusted servers.

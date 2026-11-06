@@ -1,33 +1,60 @@
 # Handoff — Auditor
 
-**Status:** PENDING
+**Status:** DONE (manual fallback; subagent quota blocked)
 
-## 1. Observation
+## Commands and Evidence
 
-- What was requested.
-- What was read.
-- What was changed.
+```text
+$ make check
+ok — 10 tool rules, clean fixture, bounded evidence
+ok — protocol initialize, pagination, error, timeout
+ok — 10 config rules, 10 tool rules, protocol, live CLI
+docs-lint: OK
+[OK] Public-safety guard passed.
+```
 
-## 2. Logic Chain
+```text
+$ node src/cli.js --stdio node --arg test/fixtures/protocol/server.js --format json --fail-on none
+16 findings (1 low, 8 medium, 7 high) in 1 server.
+rules: MCP-011..MCP-020
+```
 
-- Why this approach.
-- Trade-offs.
-- Alternatives considered.
+```text
+$ node src/cli.js test/fixtures/bad.mcp.json --format json --fail-on none
+10 findings (4 high, 6 medium)
+```
 
-## 3. Caveats
+```text
+$ node src/cli.js test/fixtures/good.mcp.json --format json
+0 findings
+```
 
-- Known limitations.
-- False positives.
-- Open questions.
+```text
+$ node src/cli.js --stdio node --arg test/fixtures/protocol/server.js --arg --hang --timeout 300
+mcp-scan: tools/list timed out after 300ms
+exit 2; no child process left
+```
 
-## 4. Conclusion
+## Pass/Fail
 
-- What is done.
-- What is not done.
-- Recommendation.
+| Claim | Result |
+|---|---|
+| Protocol handshake works | PASS |
+| Pagination returns all 7 tools | PASS |
+| JSON-RPC error is surfaced | PASS |
+| Timeout rejects and kills child | PASS |
+| 10 tool rules fire | PASS |
+| Clean tool returns 0 | PASS |
+| Config regression is clean | PASS |
+| Evidence is bounded | PASS |
+| Docs match code | PASS |
 
-## 5. Verification
+## Integrity
 
-- Commands run.
-- Output summary.
-- Evidence paths.
+- Tests call production code (`connectStdio`, `scanTools`, the CLI).
+- No hardcoded test results or facade implementations found.
+- No secrets or internal hostnames in the tree.
+
+## Verdict
+
+PASS locally. Independent audit is pending because the subagent quota is blocked.

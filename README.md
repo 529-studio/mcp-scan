@@ -14,7 +14,7 @@ It is deterministic, CI-friendly, and designed to produce **evidence** — not j
 npx github:529-studio/mcp-scan .
 ```
 
-> Alpha: the first release covers config-level checks. Dynamic sandbox testing and runtime policy enforcement are on the roadmap.
+> Alpha: config checks are stable; live tool scanning (`--live` / `--stdio`) is the new M1 layer. Dynamic sandbox testing and runtime policy enforcement are on the roadmap.
 
 ---
 
@@ -57,6 +57,23 @@ node src/cli.js ~/.config/Claude/claude_desktop_config.json
 node src/cli.js .cursor/mcp.json
 ```
 
+### Scan a live server's tools
+
+```bash
+# Connect to a server declared in the config
+node src/cli.js . --live filesystem
+
+# Connect to an arbitrary local command
+node src/cli.js --stdio node --arg test/fixtures/protocol/server.js
+
+# Timeout for slow or hanging servers
+node src/cli.js . --live filesystem --timeout 15000
+```
+
+Live mode performs the MCP `initialize` handshake, reads `tools/list` with cursor pagination, and reports tool-level findings. It does not execute tools.
+
+`--stdio` runs the command you provide. Only scan servers you trust, and prefer a pinned binary or package.
+
 If you pass a directory, `mcp-scan` looks for:
 
 ```text
@@ -85,6 +102,21 @@ config/mcp.json
 | `MCP-008` | Docker image is unpinned or uses `:latest` | Medium |
 | `MCP-009` | Remote endpoint has no visible auth | Medium |
 | `MCP-010` | Server is explicitly granted write access | High |
+
+### Tool rules (live mode)
+
+| ID | Check | Severity |
+|---|---|---|
+| `MCP-011` | Tool description contains instruction-like content | High |
+| `MCP-012` | Tool references a secret path | High |
+| `MCP-013` | Tool exposes a destructive verb | High |
+| `MCP-014` | Tool exposes a shell/exec primitive | High |
+| `MCP-015` | Tool exposes a network/egress primitive | Medium |
+| `MCP-016` | Tool exposes a file-write primitive | Medium |
+| `MCP-017` | Schema leaves command/path/url unconstrained | Medium |
+| `MCP-018` | Tool contains hidden or encoded content | High |
+| `MCP-019` | `readOnlyHint` contradicts the tool | High |
+| `MCP-020` | Tool has no usable description | Low |
 
 See [docs/rules.md](docs/rules.md) for the full rule reference.
 
@@ -157,7 +189,7 @@ name: mcp-scan
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [dev, main]
 
 jobs:
   scan:
@@ -199,7 +231,8 @@ Use `--fail-on none` for a report-only run.
 - [x] Config-level scanner (10 rules)
 - [x] JSON + SARIF output
 - [x] GitHub Action workflow
-- [ ] MCP protocol handshake and tool-definition parsing
+- [x] MCP protocol handshake and tool-definition parsing
+- [x] Tool-level rules (`MCP-011`..`MCP-020`)
 - [ ] Sandboxed dynamic tests (prompt injection, tool abuse)
 - [ ] Rule packs (auth, data flow, supply chain)
 - [ ] Hosted dashboard + evidence retention
@@ -210,13 +243,14 @@ Use `--fail-on none` for a report-only run.
 
 ## Status
 
-Alpha. The current release is a **config-level** scanner. It is useful today, but it is not a complete MCP security assessment.
+Alpha. The current release has two layers:
 
-- It does not connect to a live MCP server yet.
-- It does not test prompt injection or tool abuse yet.
-- It does not replace a pentest.
+- **Config scan:** transport, secrets, supply chain, permissions, and write access.
+- **Live tool scan:** `initialize` + `tools/list`, then tool-description and schema rules.
 
-Use it as a fast first pass in CI, then add dynamic testing and human review.
+It still does not run a sandbox, execute tools, or test prompt injection dynamically. It is a first pass, not a pentest.
+
+Use it in CI, then add dynamic testing and human review.
 
 ---
 
@@ -236,6 +270,12 @@ The hosted dashboard, SSO, policy packs, runtime guard, and enterprise connector
 If you need a different license for a commercial embedding, open an issue or contact the maintainers.
 
 ---
+
+## Branching and deployment
+
+- `dev` is the default branch and the deployment branch.
+- `main` is the stable release branch. Promote `dev` to `main` with a PR when a release is cut.
+- Open feature PRs against `dev`. Direct pushes to `dev` or `main` are blocked by the branch guard.
 
 ## Repository operations
 

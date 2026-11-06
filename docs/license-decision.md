@@ -53,7 +53,7 @@ Apache-2.0 requires preservation of notices and does not grant trademark rights.
 
 ### 3.4 Open-core is the business model
 
-The moat is not the 10 rules. It is:
+The moat is not the rule list. It is:
 
 - the hosted evidence layer and scan history;
 - policy packs and custom rules;

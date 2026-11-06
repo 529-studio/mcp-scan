@@ -9,12 +9,13 @@
 ## 1. Current state
 
 - CLI: `node src/cli.js <path>` with text, JSON, and SARIF output.
-- 10 deterministic rules (`MCP-001`..`MCP-010`).
-- Tests: fixtures + `node test/run.js`.
-- CI: `test` and `self-scan` workflows pass.
+- 20 deterministic rules: 10 config (`MCP-001`..`MCP-010`) and 10 tool (`MCP-011`..`MCP-020`).
+- Live mode: `--live <server>` and `--stdio <command>` with `initialize` + `tools/list`.
+- Tests: fixtures, protocol server, tool rules, and CLI live tests.
+- CI: `test`, `self-scan`, `docs-lint`, `secret-scan`, and `public-safety` pass.
 - Landing page: `site/index.html`.
 - License: Apache-2.0 core; commercial enterprise layer.
-- No runtime connection, no dynamic sandbox yet.
+- No sandbox or dynamic prompt-injection tests yet.
 
 ---
 
@@ -78,21 +79,25 @@ Rules of engagement:
 - [x] PR template, CODEOWNERS, branch guard, docs lint, secret scan, public-safety
 - [ ] PR opened against `dev`; `@giangdq202` tagged by the human owner after review
 
-### M1 — Protocol-aware scanner
+### M1 — Protocol-aware scanner (implementation complete)
 
-- Parse a live MCP server: `initialize`, `tools/list`.
-- Detect tool descriptions with instruction-like content.
-- Parse tool schemas for dangerous primitives (shell, file write, network).
-- Add 10 rules (`MCP-011`..`MCP-020`).
-- Add `--stdio` and `--url` targets.
-- Tests for protocol parsing and schema rules.
+- [x] Parse a live MCP server: `initialize`, `tools/list`.
+- [x] Detect tool descriptions with instruction-like content.
+- [x] Parse tool schemas for dangerous primitives (shell, file write, network).
+- [x] Add 10 rules (`MCP-011`..`MCP-020`).
+- [x] Add `--live` and `--stdio` targets.
+- [x] Tests for protocol parsing, pagination, timeouts, and tool rules.
+- [ ] HTTP/SSE transport (moved to M2).
+- [ ] Independent subagent sign-off (pending quota; manual review/audit done).
 
-### M2 — Dynamic sandbox
+### M2 — Dynamic sandbox (planned)
 
-- Run a server in an isolated sandbox (Docker/gVisor).
-- Send canary prompts; detect data exfiltration and tool abuse.
-- Capture evidence without exploiting.
-- Add `--dynamic` flag (opt-in).
+Plan: [docs/sprints/M2-DYNAMIC-SANDBOX.md](sprints/M2-DYNAMIC-SANDBOX.md)
+
+- Run a server in an isolated sandbox (Docker; `process` adapter for tests).
+- Send canary inputs; detect host reads, writes, leaks, and instruction-like output.
+- Capture an evidence bundle without exploiting.
+- Add `--dynamic`, `--sandbox`, `--allow-tool`, and `--allow-network` (opt-in).
 
 ### M3 — Public report + vendor badge
 

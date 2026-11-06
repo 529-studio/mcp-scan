@@ -44,9 +44,29 @@ parseArgs ──▶ findConfig ──▶ JSON.parse ──▶ extractServers
 - Rules never perform network calls, execute code, or read files outside the config.
 - Secret values are masked before they reach output.
 
+### `src/protocol.js`
+
+- Implements the MCP `initialize` handshake and `tools/list` pagination.
+- Uses `src/targets/stdio.js` for transport.
+- Caps pagination at 20 pages.
+
+### `src/targets/stdio.js`
+
+- Spawns a child process without a shell.
+- Speaks newline-delimited JSON-RPC 2.0.
+- Enforces a per-request timeout and kills the child on close.
+- Captures stderr (truncated) for diagnostics.
+
+### `src/tool-rules.js`
+
+- Runs deterministic rules over `tools/list` entries.
+- Checks descriptions, schemas, annotations, hidden content, and destructive primitives.
+- Never executes a tool.
+
 ### `test/run.js`
 
 - Runs the CLI against a bad fixture and a good fixture.
+- Imports the protocol and tool-rule tests.
 - Asserts finding count, exit codes, and SARIF shape.
 - No test framework; `node:assert` only.
 
@@ -105,11 +125,13 @@ Every finding must be explainable without an LLM. If a rule cannot produce evide
 - Add a rule doc in `docs/rules.md`.
 - Add a test assertion in `test/run.js`.
 
-Protocol-aware scanning (M1) will add:
+Live mode (M1) is implemented:
 
-- `src/protocol.js` — `initialize`, `tools/list`, schema parsing.
-- `src/targets/` — stdio and HTTP transports.
-- `--stdio` and `--url` flags.
+- `src/protocol.js` — `initialize`, `tools/list`, pagination.
+- `src/targets/stdio.js` — stdio transport and process lifecycle.
+- `src/tool-rules.js` — tool-level rules.
+- `--live` and `--stdio` flags.
+- HTTP transport is still pending.
 
 Dynamic sandbox (M2) will add:
 

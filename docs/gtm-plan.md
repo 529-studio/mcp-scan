@@ -86,7 +86,7 @@ Not “AI security platform”. Not “pentest”. Not “runtime firewall”. T
 
 ### Days 1–14 — ship the wedge
 
-- [x] 10 rules, CLI, JSON/SARIF, tests.
+- [x] 10 config rules, CLI, JSON/SARIF, tests.
 - [x] README + landing page.
 - [ ] GitHub Action.
 - [ ] 3 public demo configs (good/bad).

@@ -187,6 +187,7 @@
     .sev { font-family: var(--mono); font-size: 11px; padding: 3px 7px; border-radius: 999px; border: 1px solid var(--line-2); }
     .sev-high { color: var(--red); border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.07); }
     .sev-med { color: var(--amber); border-color: rgba(251, 191, 36, 0.3); background: rgba(251, 191, 36, 0.07); }
+    .sev-low { color: var(--muted); border-color: var(--line-2); background: rgba(139, 148, 158, 0.07); }
     @media (max-width: 900px) { .rules-grid { grid-template-columns: 1fr; } }
 
     .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -280,12 +281,13 @@
     <section class="hero">
       <div class="wrap hero-grid">
         <div>
-          <div class="pill"><span class="dot"></span> Alpha · 10 rules · Apache-2.0</div>
+          <div class="pill"><span class="dot"></span> Alpha · 20 rules · Apache-2.0</div>
           <h1>Ship MCP agents<br />without shipping <span class="accent">vulnerabilities.</span></h1>
           <p class="lede">
             <strong>mcp-scan</strong> is the first 5-minute security check for MCP servers.
             It finds unpinned packages, leaked secrets, shell wrappers, broad filesystem roots,
-            wildcard binds, and write access granted by default — then gives you the fix.
+            wildcard binds, and write access granted by default. In live mode it also reads
+            <span class="mono">tools/list</span> and flags dangerous descriptions, schemas, and annotations — then gives you the fix.
           </p>
           <div class="hero-actions">
             <button class="btn btn-primary" id="copy-run" type="button">
@@ -386,8 +388,8 @@
           </div>
           <div class="step">
             <div class="step-num">STEP 02</div>
-            <h3>Run 10 deterministic rules</h3>
-            <p>Transport, supply chain, secrets, permissions, network exposure, debug flags, write access. No LLM. No guessing.</p>
+            <h3>Run 20 deterministic rules</h3>
+            <p>Transport, supply chain, secrets, permissions, network exposure, debug flags, write access — plus tool descriptions, schemas, hidden content, and annotations in live mode. No LLM. No guessing.</p>
           </div>
           <div class="step">
             <div class="step-num">STEP 03</div>
@@ -402,8 +404,8 @@
       <div class="wrap">
         <div class="section-head">
           <div class="kicker">Coverage</div>
-          <h2>10 rules that catch the expensive mistakes.</h2>
-          <p>Small, testable, versioned. New rules are welcome — especially ones backed by a real server and a reproducible fixture.</p>
+          <h2>20 rules that catch the expensive mistakes.</h2>
+          <p>Ten config rules, ten tool rules. Small, testable, versioned. New rules are welcome — especially ones backed by a real server and a reproducible fixture.</p>
         </div>
         <div class="rules-grid">
           <div class="rule"><span class="rule-id">MCP-001</span><span>Remote endpoint uses plain HTTP</span><span class="sev sev-high">HIGH</span></div>
@@ -416,6 +418,24 @@
           <div class="rule"><span class="rule-id">MCP-008</span><span>Docker image is unpinned</span><span class="sev sev-med">MED</span></div>
           <div class="rule"><span class="rule-id">MCP-009</span><span>Remote endpoint has no visible auth</span><span class="sev sev-med">MED</span></div>
           <div class="rule"><span class="rule-id">MCP-010</span><span>Explicit write access</span><span class="sev sev-high">HIGH</span></div>
+        </div>
+
+        <div class="section-head" style="margin-top:34px;margin-bottom:18px">
+          <div class="kicker">Live mode · tools/list</div>
+          <h2 style="font-size:clamp(22px,2.6vw,30px)">Ten tool rules for the surface the config cannot see.</h2>
+          <p>Run with <span class="mono">--live</span> or <span class="mono">--stdio</span>. It reads the tool manifest, never executes a tool.</p>
+        </div>
+        <div class="rules-grid">
+          <div class="rule"><span class="rule-id">MCP-011</span><span>Instruction-like description</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-012</span><span>Secret path reference</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-013</span><span>Destructive verb</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-014</span><span>Shell or exec primitive</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-015</span><span>Network or egress primitive</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-016</span><span>File-write primitive</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-017</span><span>Unconstrained command/path/url</span><span class="sev sev-med">MED</span></div>
+          <div class="rule"><span class="rule-id">MCP-018</span><span>Hidden or encoded content</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-019</span><span>readOnlyHint contradiction</span><span class="sev sev-high">HIGH</span></div>
+          <div class="rule"><span class="rule-id">MCP-020</span><span>No usable description</span><span class="sev sev-low">LOW</span></div>
         </div>
       </div>
     </section>
@@ -439,7 +459,7 @@
             <h2>It never touches your runtime.</h2>
           </div>
           <div class="feature-list">
-            <div class="feature"><span class="check">✓</span><div><b>No remote execution</b><p>It reads config. It does not connect to your MCP server, call tools, or run exploits.</p></div></div>
+            <div class="feature"><span class="check">✓</span><div><b>No tool execution</b><p>Static mode reads config. Live mode reads <span class="mono">tools/list</span>. Neither calls a tool, runs an exploit, or uploads code.</p></div></div>
             <div class="feature"><span class="check">✓</span><div><b>Secrets stay masked</b><p>Reports show a masked value, never the full credential. Nothing is uploaded by default.</p></div></div>
             <div class="feature"><span class="check">✓</span><div><b>Apache-2.0 core</b><p>Permissive, patent grant, enterprise-friendly. The hosted/enterprise layer is separate.</p></div></div>
           </div>
@@ -474,7 +494,7 @@
             <h3>Open source</h3>
             <div class="amount">$0</div>
             <ul>
-              <li>CLI + 10 rules</li>
+              <li>CLI + 20 rules</li>
               <li>JSON &amp; SARIF output</li>
               <li>GitHub Action</li>
               <li>Community support</li>
@@ -530,11 +550,15 @@
         <div class="faq">
           <details open>
             <summary>Is this a pentest?</summary>
-            <p>No. It is a deterministic first pass over your MCP configuration. It catches common, high-signal mistakes. It does not replace a human review, dynamic testing, or a pentest.</p>
+            <p>No. It is a deterministic first pass over your MCP configuration and, in live mode, your tool manifest. It catches common, high-signal mistakes. It does not replace a human review, dynamic testing, or a pentest.</p>
+          </details>
+          <details>
+            <summary>Does it connect to a live server?</summary>
+            <p>Only when you ask. <span class="mono">--live</span> and <span class="mono">--stdio</span> perform the MCP <span class="mono">initialize</span> handshake and read <span class="mono">tools/list</span>. It does not call a tool, execute a tool, or run an exploit.</p>
           </details>
           <details>
             <summary>Does it exploit anything?</summary>
-            <p>No. It does not connect to your MCP server, call tools, or run exploits. It reads config files and reports what it finds.</p>
+            <p>No. It never calls a tool or runs an exploit. Live mode reads the tool manifest and reports what it finds.</p>
           </details>
           <details>
             <summary>Does it upload my config?</summary>
@@ -550,7 +574,7 @@
           </details>
           <details>
             <summary>Can I add a rule?</summary>
-            <p>Yes. Add a <span class="mono">check(server)</span> function, a fixture, and a docs entry. See <a class="mint" href="https://github.com/529-studio/mcp-scan/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+            <p>Yes. Add a <span class="mono">check(server)</span> function in <span class="mono">src/rules.js</span> or a <span class="mono">check(tool)</span> function in <span class="mono">src/tool-rules.js</span>, plus a fixture and a docs entry. See <a class="mint" href="https://github.com/529-studio/mcp-scan/blob/dev/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
           </details>
         </div>
       </div>
@@ -581,8 +605,8 @@
       </div>
       <div class="footer-links">
         <a href="https://github.com/529-studio/mcp-scan" target="_blank" rel="noreferrer">GitHub</a>
-        <a href="https://github.com/529-studio/mcp-scan/blob/main/docs/rules.md" target="_blank" rel="noreferrer">Rules</a>
-        <a href="https://github.com/529-studio/mcp-scan/blob/main/SECURITY.md" target="_blank" rel="noreferrer">Security</a>
+        <a href="https://github.com/529-studio/mcp-scan/blob/dev/docs/rules.md" target="_blank" rel="noreferrer">Rules</a>
+        <a href="https://github.com/529-studio/mcp-scan/blob/dev/SECURITY.md" target="_blank" rel="noreferrer">Security</a>
         <a href="mailto:contact@529studio.site">Contact</a>
       </div>
     </div>

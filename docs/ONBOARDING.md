@@ -6,7 +6,7 @@
 
 ## 1. What this is
 
-`mcp-scan` reads an MCP configuration (for example `mcp.json`, `claude_desktop_config.json`, `.cursor/mcp.json`) and reports deterministic security findings. It does not connect to a live server yet, does not exploit, and does not upload code.
+`mcp-scan` reads an MCP configuration (for example `mcp.json`, `claude_desktop_config.json`, `.cursor/mcp.json`) and reports deterministic security findings. In live mode (`--live` or `--stdio`) it connects to a local stdio server to read `tools/list`. It does not execute tools, exploit, or upload code.
 
 ---
 
@@ -57,6 +57,7 @@ scripts/check-public-safe.sh
 Read `AGENTS.md`. The short version:
 
 - English-only code and docs, no emojis.
+- `dev` is the default branch and deployment branch; `main` is the stable release branch.
 - No direct push to `main` or `dev`; PR only.
 - No secrets in the tree; use `.mcp.example.jsonc` placeholders.
 - Every rule needs a fixture, a docs entry, and a test.
