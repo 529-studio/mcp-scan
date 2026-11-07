@@ -1,0 +1,51 @@
+{
+  "tool": "mcp-scan",
+  "version": "0.2.0",
+  "target": "sample-b",
+  "servers": 2,
+  "findings": [
+    {
+      "id": "MCP-003",
+      "title": "Secret-like environment variable is set inline",
+      "severity": "high",
+      "server": "sample-b",
+      "evidence": "redacted",
+      "impact": "Secret leakage.",
+      "fix": "Use a secret manager."
+    },
+    {
+      "id": "MCP-017",
+      "title": "Schema leaves a command, path, or URL unconstrained",
+      "severity": "medium",
+      "server": "sample-b",
+      "evidence": "redacted",
+      "impact": "Injection surface.",
+      "fix": "Add a constraint."
+    },
+    {
+      "id": "DYN-004",
+      "title": "Tool output contains instruction-like content",
+      "severity": "high",
+      "server": "sample-b",
+      "evidence": "redacted",
+      "impact": "Prompt injection surface.",
+      "fix": "Treat output as data."
+    },
+    {
+      "id": "DYN-005",
+      "title": "Tool exceeded the time budget",
+      "severity": "medium",
+      "server": "sample-b",
+      "evidence": "redacted",
+      "impact": "Agent stall.",
+      "fix": "Add a timeout."
+    }
+  ],
+  "summary": {
+    "info": 0,
+    "low": 0,
+    "medium": 2,
+    "high": 2,
+    "critical": 0
+  }
+}

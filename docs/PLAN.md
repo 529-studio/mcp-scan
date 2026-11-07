@@ -103,13 +103,18 @@ Plan: [docs/sprints/M2-DYNAMIC-SANDBOX.md](sprints/M2-DYNAMIC-SANDBOX.md)
 - [x] Docker smoke test on a real image (`make smoke-docker`).
 - [ ] Independent reviewer/auditor sign-off (pending quota).
 
-### M3 — Public report + vendor badge
+### M3 — Public report + vendor badge (infrastructure in progress)
 
-- Scan 20 public MCP configs with permission.
-- Responsible disclosure.
-- Publish “State of MCP Security 2026”.
-- Launch the badge program.
-- 3 design partners, 3 paid accounts.
+Plan: [docs/sprints/M3-PUBLIC-REPORT-BADGE.md](sprints/M3-PUBLIC-REPORT-BADGE.md)
+
+- [x] Report aggregate/render scripts.
+- [x] Draft report and report page.
+- [x] Badge program rules, badge page, and application template.
+- [ ] 20 permitted MCP configs scanned.
+- [ ] Responsible disclosure before publication.
+- [ ] Publish the report.
+- [ ] 3 badge applicants approved.
+- [ ] 3 design partners, 3 paid accounts.
 
 ### M4 — Hosted evidence layer
 

@@ -1,0 +1,51 @@
+{
+  "tool": "mcp-scan",
+  "version": "0.2.0",
+  "target": "sample-a",
+  "servers": 2,
+  "findings": [
+    {
+      "id": "MCP-003",
+      "title": "Secret-like environment variable is set inline",
+      "severity": "high",
+      "server": "sample-a",
+      "evidence": "redacted",
+      "impact": "Secret leakage.",
+      "fix": "Use a secret manager."
+    },
+    {
+      "id": "MCP-002",
+      "title": "npx package is not pinned",
+      "severity": "medium",
+      "server": "sample-a",
+      "evidence": "redacted",
+      "impact": "Supply chain drift.",
+      "fix": "Pin the version."
+    },
+    {
+      "id": "MCP-011",
+      "title": "Tool description contains instruction-like content",
+      "severity": "high",
+      "server": "sample-a",
+      "evidence": "redacted",
+      "impact": "Prompt injection surface.",
+      "fix": "Remove instructions."
+    },
+    {
+      "id": "DYN-001",
+      "title": "Tool read a host canary file",
+      "severity": "high",
+      "server": "sample-a",
+      "evidence": "redacted",
+      "impact": "Host file read.",
+      "fix": "Scope the tool."
+    }
+  ],
+  "summary": {
+    "info": 0,
+    "low": 0,
+    "medium": 1,
+    "high": 3,
+    "critical": 0
+  }
+}
