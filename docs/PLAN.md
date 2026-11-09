@@ -103,16 +103,17 @@ Plan: [docs/sprints/M2-DYNAMIC-SANDBOX.md](sprints/M2-DYNAMIC-SANDBOX.md)
 - [x] Docker smoke test on a real image (`make smoke-docker`).
 - [ ] Independent reviewer/auditor sign-off (pending quota).
 
-### M3 — Public report + vendor badge (infrastructure in progress)
+### M3 — Public report + vendor badge (execution)
 
 Plan: [docs/sprints/M3-PUBLIC-REPORT-BADGE.md](sprints/M3-PUBLIC-REPORT-BADGE.md)
+Execution: [docs/sprints/M3-EXECUTION-PLAN.md](sprints/M3-EXECUTION-PLAN.md)
 
 - [x] Report aggregate/render scripts.
 - [x] Draft report and report page.
 - [x] Badge program rules, badge page, and application template.
-- [ ] 20 permitted MCP configs scanned.
-- [ ] Responsible disclosure before publication.
-- [ ] Publish the report.
+- [ ] T2 (#9): 20 permitted MCP configs and a public manifest.
+- [ ] T3 (#10): scans, aggregate, triage, and responsible disclosure.
+- [ ] T4 (#11): publish the report and open badge applications.
 - [ ] 3 badge applicants approved.
 - [ ] 3 design partners, 3 paid accounts.
 
