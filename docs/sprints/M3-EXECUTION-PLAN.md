@@ -50,6 +50,7 @@ Select 20 MCP configurations or servers and record what each vendor permits: con
 ### Deliverables
 
 - `docs/reports/sample-2026/MANIFEST.md` with 20 anonymized entries.
+- `docs/reports/sample-2026/OUTREACH.md` with the permission ladder and templates.
 - A private permission register outside the repo.
 - A short selection rationale and exclusion list.
 
